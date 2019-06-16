@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: disease template
+# key: dt
+# --
+* $1
+** Name
+$1$0
+** Background
+** Epidemiology
+** Pathology
+** Clinical features
+** Investigation
+** Diagnosis
+** Management
+** Comments

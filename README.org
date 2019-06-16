@@ -1,0 +1,7 @@
+#+BEGIN_SRC bash
+mkdir ~/.emacs.d && cd ~/.emacs.d
+touch init.el
+cat (load (expand-file-name "personal/init.el" user-emacs-directory)) > init.el
+ln -s ~/Dropbox/dotfiles/emacs.config ~/.emacs.d/personal
+#+END_SRC
+
