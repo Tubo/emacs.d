@@ -232,7 +232,11 @@
   "a" 'org-agenda
   "b" 'counsel-switch-buffer
   "c" 'org-capture
+  "d" 'ranger
   "e" 'counsel-find-file
+  "1" 'eyebrowse-switch-to-window-config-1
+  "2" 'eyebrowse-switch-to-window-config-2
+  "3" 'eyebrowse-switch-to-window-config-3
  )
 
 ;; ** Mode Keybindings
