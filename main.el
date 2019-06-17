@@ -234,6 +234,7 @@
   "c" 'org-capture
   "d" 'ranger
   "e" 'counsel-find-file
+  "g" 'magit-status
   "1" 'eyebrowse-switch-to-window-config-1
   "2" 'eyebrowse-switch-to-window-config-2
   "3" 'eyebrowse-switch-to-window-config-3
@@ -245,6 +246,7 @@
   :keymaps 'org-mode-map
   "y" 'org-store-link
   "p" 'org-insert-link
+  "s" 'org-narrow-to-subtree
   )
 
 ;; Magit keybindings
