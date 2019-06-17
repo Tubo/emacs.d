@@ -58,7 +58,6 @@
   (org-table ((t (:foreground "#9FC59F" :family "Monaco"))))
   (org-tag ((t (:foreground "dark gray" :weight ultra-light :height 0.8 :family "Menlo"))))
   (org-todo ((t (:foreground "gold" :weight bold))))
-  (mode-line ((t (:background "#2B2B2B" :foreground "#8FB28F" :box (:line-width -1 :style released-button) :weight semi-light :family "Andale Mono"))))
   (variable-pitch ((t (:height 1.3 :family "Avenir Next"))))
   )
 

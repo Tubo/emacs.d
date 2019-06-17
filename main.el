@@ -21,11 +21,17 @@
 ;; Fonts
 ;; =====
 (cond ((eq system-type 'darwin)
-       (add-to-list 'default-frame-alist '(font . "Monaco")))
+       (progn
+         (add-to-list 'default-frame-alist '(font . "Monaco"))
+         ))
       ((eq system-type 'gnu/linux)
-       (add-to-list 'default-frame-alist '(font . "Source Code Variable")))
+       (progn
+         (add-to-list 'default-frame-alist '(font . "Source Code Variable"))
+         ))
       ((eq system-type 'windows-nt)
-       (add-to-list 'default-frame-alist '(font . "Source Code Pro"))))
+       (progn
+         (add-to-list 'default-frame-alist '(font . "Source Code Pro"))
+         )))
 
 
 ;; Initialise 'use-package and 'general
@@ -42,7 +48,6 @@
 ;; ================
 (setq inhibit-default-init 't)
 (setq vc-follow-symlinks nil)
-(setq shell-command-switch "-ic")
 (setq inhibit-splash-screen t
       inhibit-startup-message t)
 (electric-pair-mode)
@@ -56,6 +61,15 @@
   :pin gnu
   :ensure t)
 
+;; Emacs exec paths should be same as shells
+(use-package exec-path-from-shell
+  :ensure t
+  :when (memq window-system '(mac ns x))
+  :init
+  (setq exec-path-from-shell-arguments nil)
+  :config
+  (exec-path-from-shell-initialize))
+
 
 ;; Magit
 ;; =====
@@ -67,7 +81,6 @@
 ;; ==========
 (use-package ace-window
   :ensure t)
-
 
 ;; Ivy / Swiper / Counsel
 ;; ======================
@@ -154,6 +167,24 @@
 (load-relative "config-org.el")
 
 
+;; Eyebrowse
+;; =========
+(use-package eyebrowse
+  :ensure t
+  :init
+  (setq eyebrowse-new-workspace t)
+  (setq eyebrowse-wrap-around t)
+  :config
+  (eyebrowse-setup-evil-keys)
+  (eyebrowse-mode t))
+
+
+;; Helpful
+;; =======
+(use-package helpful
+  :ensure t)
+
+
 ;; Load custom.el
 ;; ==============
 (setq custom-file (expand-file-name "personal/custom.el" user-emacs-directory))
@@ -167,7 +198,12 @@
   :config
   (load-theme 'zenburn t)
   )
-
+(use-package smart-mode-line
+  :ensure t
+  :config
+  (sml/setup))
+(use-package smart-mode-line-powerline-theme
+  :ensure t)
 
 ;; Keybindings
 ;; ===========
@@ -175,7 +211,39 @@
 (general-def
   "C-x k" 'kill-this-buffer)
 
-;; Magic keybindings
+;; * Prefix Keybindings
+;; :prefix can be used to prevent redundant specification of prefix keys
+;; again, variables are not necessary and likely not useful if you are only
+;; using a definer created with `general-create-definer' for the prefixes
+;; (defconst my-leader "SPC")
+;; (defconst my-local-leader "SPC m")
+
+(general-create-definer my-leader-def
+  ;; :prefix my-leader
+  :prefix "SPC")
+
+(general-create-definer my-local-leader-def
+  ;; :prefix my-local-leader
+  :prefix "SPC m")
+
+;; ** Global Keybindings
+(my-leader-def
+  :keymaps 'normal
+  "a" 'org-agenda
+  "b" 'counsel-switch-buffer
+  "c" 'org-capture
+  "e" 'counsel-find-file
+ )
+
+;; ** Mode Keybindings
+(my-local-leader-def
+  :states 'normal
+  :keymaps 'org-mode-map
+  "y" 'org-store-link
+  "p" 'org-insert-link
+  )
+
+;; Magit keybindings
 (general-def
   "C-x g" 'magit-status
   "C-x M-g" 'magit-dispatch)
@@ -204,3 +272,8 @@
   "M-i" 'counsel-imenu
   )
 
+;; Helpful keybindings
+(general-def
+  "C-h f" 'helpful-callable
+  "C-h k" 'helpful-key
+  "C-h v" 'helpful-variable)
