@@ -303,7 +303,7 @@
   :ensure t
   :init
   (setq yas-snippet-dirs
-        '((expand-file-name "personal/snippets" user-emacs-directory))
+        `(,(expand-file-name "personal/snippets" user-emacs-directory))
         )
   )
 
@@ -415,9 +415,10 @@
 (my-local-leader-def
   :states 'normal
   :keymaps 'org-mode-map
-  "y" 'org-store-link
   "p" 'org-insert-link
+  "r" 'org-refile
   "s" 'org-narrow-to-subtree
+  "y" 'org-store-link
   )
 
 
