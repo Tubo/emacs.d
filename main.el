@@ -115,6 +115,8 @@
   :config
   (counsel-mode t)
   :general
+  ("M-x" 'counsel-M-x
+   "C-x C-f" 'counsel-find-file)
   (minibuffer-local-map
    "C-r" 'counsel-minibuffer-history
    )
@@ -139,8 +141,10 @@
   :after evil
   :ensure t
   :config
-  (evil-collection-init '(help helpful magit custom diff-mode doc-view ediff elisp-mode elisp-refs epa eshell eww ibuffer imenu-list info package-menu popup term which-key))
+  (evil-collection-init '(help helpful custom diff-mode doc-view ediff elisp-mode elisp-refs epa eshell eww ibuffer imenu-list info package-menu popup term which-key))
   )
+(use-package evil-magit
+  :ensure t)
 
 
 ;; Dired-related
@@ -359,6 +363,12 @@
   :ensure t
   :config
   (which-key-mode))
+
+
+;; Hyperbole
+(use-package hyperbole
+  :disabled
+  :ensure t)
 
 ;; Load custom.el
 ;; ==============

@@ -1,12 +1,13 @@
 (use-package org
   :config
   (add-hook 'org-mode-hook (lambda () (visual-line-mode 1)))
-  (add-hook 'org-mode-hook (lambda () (variable-pitch-mode 1)))
   (add-hook 'org-mode-hook (lambda () (org-variable-pitch-minor-mode 1)))
   (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
   (org-clock-persistence-insinuate)
   (setq org-refile-targets '((org-agenda-files :maxlevel . 2)))
   (setq org-pretty-entities t)
+  (setq org-use-sub-suerpscripts "{}")
+  (setq org-log-done 'time)
   :custom
   (org-startup-indented t)
   (org-clock-persist 'history)  
@@ -73,16 +74,16 @@
   (org-document-info-keyword ((t (:inherit shadow))))
   (org-document-title ((t (:foreground "#8CD0D3" :height 1.4 :family "Noto Sans"))))
   (org-indent ((t (:family "Source Code Pro" :inherit org-hide))))
-  (org-level-1 ((t (:foreground "#DFAF8F" :height 1.4 :family "DejaVu Serif" :weight bold))))
-  (org-level-2 ((t (:foreground "#BFEBBF" :height 1.3 :family "DejaVu Serif" :weight bold))))
-  (org-level-3 ((t (:foreground "#7CB8BB" :height 1.2 :family "DejaVu Serif" :weight bold))))
+  (org-level-1 ((t (:foreground "#DFAF8F" :height 1.4 :family "ETBembo" :weight bold))))
+  (org-level-2 ((t (:foreground "#BFEBBF" :height 1.3 :family "ETBembo" :weight bold))))
+  (org-level-3 ((t (:foreground "#7CB8BB" :height 1.2 :family "ETBembo" :weight bold))))
   (org-meta-line ((t (:inherit font-lock-comment-face :height 0.9 :family "Source Code Variable"))))
   (org-priority ((t (:foreground "gold" :family "Source Code Variable"))))
   (org-special-keyword ((t (:inherit org-meta-line))))
   (org-table ((t (:foreground "#9FC59F" :family "Source Code Variable"))))
   (org-tag ((t (:foreground "dark gray" :weight ultra-light :height 0.8 :family "Source Code Variable"))))
   (org-todo ((t (:foreground "gold" :weight bold))))
-  (variable-pitch ((t (:family "DejaVu Sans"))))
+  (variable-pitch ((t (:family "ETBembo" :height 1.2))))
   )
 
 
