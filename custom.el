@@ -12,4 +12,4 @@
  '(org-startup-indented t)
  '(package-selected-packages
    (quote
-    (smart-mode-line-powerline-theme smart-mode-line eyebrowse evil-collection evil zenburn-theme zenburn ace-window dired-open dired-hacks-utils ranger elm-mode yasnippet counsel ivy better-defaults general use-package))))
+    (hyperbole smart-mode-line-powerline-theme smart-mode-line eyebrowse evil-collection evil zenburn-theme zenburn ace-window dired-open dired-hacks-utils ranger elm-mode yasnippet counsel ivy better-defaults general use-package))))
