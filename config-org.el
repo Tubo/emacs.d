@@ -35,6 +35,13 @@
 (use-package org-variable-pitch
   :ensure t)
 
+(use-package ox-moderncv
+  :load-path "/home/tubo/.emacs.d/personal/packages/org-cv"
+  :init (require 'ox-moderncv)
+  )
+
+
+;; System-dependent settings
 (use-package org
   :if (eq system-type 'darwin)
   :config
