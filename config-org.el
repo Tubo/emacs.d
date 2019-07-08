@@ -6,7 +6,7 @@
   (org-clock-persistence-insinuate)
   (setq org-refile-targets '((org-agenda-files :maxlevel . 2)))
   (setq org-pretty-entities t)
-  (setq org-use-sub-suerpscripts "{}")
+  (setq org-use-sub-superscripts "{}")
   (setq org-log-done 'time)
   :custom
   (org-startup-indented t)
