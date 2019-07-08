@@ -415,6 +415,7 @@
   "2" 'eyebrowse-switch-to-window-config-2
   "3" 'eyebrowse-switch-to-window-config-3
   "/" 'swiper
+  "." 'org-pomodoro
  )
 
 

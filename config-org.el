@@ -19,6 +19,12 @@
   :ensure t
   )
 
+(use-package org-pomodoro
+  :ensure t)
+
+(use-package org-variable-pitch
+  :ensure t)
+
 (use-package ox-pandoc
   :disabled
   :ensure t
@@ -31,15 +37,6 @@
 (use-package ox-hugo
   :ensure t
   :after ox)
-
-(use-package org-variable-pitch
-  :ensure t)
-
-(use-package ox-moderncv
-  :load-path "/home/tubo/.emacs.d/personal/packages/org-cv"
-  :init (require 'ox-moderncv)
-  )
-
 
 ;; System-dependent settings
 (use-package org
