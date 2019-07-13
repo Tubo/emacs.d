@@ -385,9 +385,15 @@
   )
 (use-package smart-mode-line
   :ensure t
+  :init
+  (setq rm-blacklist
+        '(" counsel" " ivy" " WK" " ARev" " Undo-Tree" " ElDoc"
+          " BufFace" " Ind" " OVP" " Wrap" " Abbrev"))
+  (setq sml/name-width 30)
   :config
   (sml/setup))
 (use-package smart-mode-line-powerline-theme
+  :disabled
   :ensure t)
 
 ;; Keybindings
