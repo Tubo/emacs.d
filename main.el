@@ -322,15 +322,6 @@
   )
 
 
-;; Anki
-;; ====
-(use-package anki-editor
-  :ensure t
-  :custom
-  (anki-editor-create-decks t)
-  )
-
-
 ;; Org-mode related
 ;; ================
 (load-relative "config-org.el")
