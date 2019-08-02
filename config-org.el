@@ -9,12 +9,12 @@
   (setq org-pretty-entities t)
   (setq org-use-sub-superscripts "{}")
   (setq org-log-done 'time)
+  (setq org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
   :custom
   (org-startup-indented t)
   (org-clock-persist 'history)  
   (org-agenda-todo-list-sublevels nil)
   (org-tags-column -100)
-  (org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
   :custom-face
   (org-level-1 ((t (:foreground "#DFAF8F" :height 1.4))))
   (org-level-2 ((t (:foreground "#BFEBBF" :height 1.2))))
