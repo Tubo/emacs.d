@@ -38,8 +38,10 @@
 (use-package org-pomodoro
   :ensure t)
 
+
 (use-package org-variable-pitch
   :ensure t)
+
 
 (use-package ox-pandoc
   :disabled
@@ -50,11 +52,17 @@
      (88 "to docx." org-pandoc-export-to-docx)))
   )
 
+
 (use-package ox-hugo
   :ensure t
   :after ox)
 
-;; System-dependent settings
+
+(use-package ox-cv
+  :init (require 'ox-cv)
+  )
+
+;; MacOS settings
 (use-package org
   :if (eq system-type 'darwin)
   :config
@@ -65,6 +73,7 @@
   (variable-pitch ((t (:height 1.2 :family "Avenir Next"))))
   )
 
+;; Linux settings
 (use-package org
   :if (eq system-type 'gnu/linux)
   :custom
@@ -73,6 +82,8 @@
   (variable-pitch ((t (:height 1.2 :family "Noto Sans"))))
   )
 
+
+;; Windows settings
 (use-package org
   :if (eq system-type 'windows-nt)
   :custom

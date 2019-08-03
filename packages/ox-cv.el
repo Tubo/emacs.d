@@ -1,36 +1,7 @@
 ;;; ox-moderncv.el --- LaTeX moderncv Back-End for Org Export Engine -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018 Free Software Foundation, Inc.
-
-;; Author: Oscar Najera <hi AT oscarnajera.com DOT com>
-;; Keywords: org, wp, tex
-
-;; This file is not part of GNU Emacs.
-
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-;;
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-;;
-;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
-
-;;; Commentary:
-;;
-;; This library implements a LaTeX moderncv back-end, derived from the
-;; LaTeX one.
-
-;;; Code:
 (require 'cl-lib)
 (require 'ox-latex)
-(require 'org-cv-utils)
 
 ;; Install a default set-up for moderncv export.
 (unless (assoc "moderncv" org-latex-classes)
@@ -48,14 +19,23 @@
   "Options specific for using the moderncv class in LaTeX export."
   :tag "Org moderncv"
   :group 'org-export
-  :version "25.3")
+  :version "26.2")
 
 ;;; Define Back-End
 (org-export-define-derived-backend 'moderncv 'latex
+  :menu-entry
+  '(?l 1
+       ((?C "As LaTeX buffer (CV)" org-cv-export-as-latex)
+	(?c "As LaTeX file (CV)" org-cv-export-to-latex)
+	(?R "As PDF file (CV)" org-cv-export-to-pdf)
+	(?r "As PDF file and open (CV)"
+	    (lambda (a s v b)
+	      (if a (org-cv-export-to-pdf t s v b)
+		(org-open-file (org-cv-export-to-pdf nil s v b)))))))
   :options-alist
   '((:latex-class "LATEX_CLASS" nil "moderncv" t)
-    (:cvstyle "CVSTYLE" nil "classic" t)
-    (:cvcolor "CVCOLOR" nil nil t)
+    (:cvstyle "CVSTYLE" nil "banking" t)
+    (:cvcolor "CVCOLOR" nil "black" t)
     (:mobile "MOBILE" nil nil parse)
     (:homepage "HOMEPAGE" nil nil parse)
     (:address "ADDRESS" nil nil newline)
@@ -65,8 +45,10 @@
     (:linkedin "LINKEDIN" nil nil parse)
     (:with-email nil "email" t t)
     )
-  :translate-alist '((template . org-moderncv-template)
-                     (headline . org-moderncv-headline)))
+  :translate-alist '((template . org-cv-template)
+                     (headline . org-cv-headline)
+                     ;; link
+                     ))
 
 
 ;;;; Template
@@ -74,7 +56,7 @@
 ;; Template used is similar to the one used in `latex' back-end,
 ;; excepted for the table of contents and moderncv themes.
 
-(defun org-moderncv-template (contents info)
+(defun org-cv-template (contents info)
   "Return complete document string after LaTeX conversion.
 CONTENTS is the transcoded contents string.  INFO is a plist
 holding export options."
@@ -90,7 +72,7 @@ holding export options."
      (org-latex-make-preamble info)
      ;; cvstyle
      (let ((cvstyle (org-export-data (plist-get info :cvstyle) info)))
-       (when cvstyle (format "\\moderncvstyle{%s}\n" cvstyle)))
+       (when cvstyle (format "\\moderncvstyle[mixedrules,center]{%s}\n" cvstyle)))
      ;; cvcolor
      (let ((cvcolor (org-export-data (plist-get info :cvcolor) info)))
        (when (not (string-empty-p cvcolor)) (format "\\moderncvcolor{%s}\n" cvcolor)))
@@ -179,24 +161,24 @@ holding export options."
      "\\end{document}")))
 
 
-(defun org-moderncv--format-cventry (headline contents info)
+(defun org-cv--format-cventry (headline contents info)
   "Format HEADLINE as as cventry.
 CONTENTS holds the contents of the headline.  INFO is a plist used
 as a communication channel."
   (let* ((title (org-export-data (org-element-property :title headline) info))
          (from-date (or (org-element-property :FROM headline) (error "No FROM property provided for cventry %s" title)))
          (to-date (org-element-property :TO headline))
+         (date (format "%s--%s" from-date to-date))
          (employer (org-element-property :EMPLOYER headline))
          (location (or (org-element-property :LOCATION headline) ""))
          (note (or (org-element-property :NOTE headline) "")))
     (format "\\cventry{\\textbf{%s}}{%s}{%s}{%s}{%s}{%s}\n"
-            (org-cv-utils--format-time-window from-date to-date)
-            title employer location note contents)))
+            date title employer location note contents)))
 
 
 ;;;; Headline
-(defun org-moderncv-headline (headline contents info)
-  "Transcode HEADLINE element into moderncv code.
+(defun org-cv-headline (headline contents info)
+  "Transcode HEADLINE element into moderncv LaTeX code.
 CONTENTS is the contents of the headline.  INFO is a plist used
 as a communication channel."
   (unless (org-element-property :footnote-section-p headline)
@@ -205,8 +187,116 @@ as a communication channel."
       (cond
        ;; is a cv entry
        ((equal environment "cventry")
-        (org-moderncv--format-cventry headline contents info))
+        (org-cv--format-cventry headline contents info))
        ((org-export-with-backend 'latex headline contents info))))))
 
-(provide 'ox-moderncv)
-;;; ox-moderncv ends here
+
+;;; Commands
+
+;;;###autoload
+(defun org-cv-export-as-latex
+  (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer as a CV buffer.
+
+If narrowing is active in the current buffer, only export its
+narrowed part.
+
+If a region is active, export that region.
+
+A non-nil optional argument ASYNC means the process should happen
+asynchronously.  The resulting buffer should be accessible
+through the `org-export-stack' interface.
+
+When optional argument SUBTREEP is non-nil, export the sub-tree
+at point, extracting information from the headline properties
+first.
+
+When optional argument VISIBLE-ONLY is non-nil, don't export
+contents of hidden elements.
+
+When optional argument BODY-ONLY is non-nil, only write code
+between \"\\begin{document}\" and \"\\end{document}\".
+
+EXT-PLIST, when provided, is a property list with external
+parameters overriding Org default settings, but still inferior to
+file-local settings.
+
+Export is done in a buffer named \"*Org BEAMER Export*\", which
+will be displayed when `org-export-show-temporary-export-buffer'
+is non-nil."
+  (interactive)
+  (org-export-to-buffer 'moderncv "*Org CV Export*"
+    async subtreep visible-only body-only ext-plist (lambda () (LaTeX-mode))))
+
+;;;###autoload
+(defun org-beamer-export-to-latex
+  (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer as a CV (tex).
+
+If narrowing is active in the current buffer, only export its
+narrowed part.
+
+If a region is active, export that region.
+
+A non-nil optional argument ASYNC means the process should happen
+asynchronously.  The resulting file should be accessible through
+the `org-export-stack' interface.
+
+When optional argument SUBTREEP is non-nil, export the sub-tree
+at point, extracting information from the headline properties
+first.
+
+When optional argument VISIBLE-ONLY is non-nil, don't export
+contents of hidden elements.
+
+When optional argument BODY-ONLY is non-nil, only write code
+between \"\\begin{document}\" and \"\\end{document}\".
+
+EXT-PLIST, when provided, is a property list with external
+parameters overriding Org default settings, but still inferior to
+file-local settings.
+
+Return output file's name."
+  (interactive)
+  (let ((file (org-export-output-file-name ".tex" subtreep)))
+    (org-export-to-file 'moderncv file
+      async subtreep visible-only body-only ext-plist)))
+
+
+;;;###autoload
+(defun org-cv-export-to-pdf
+  (&optional async subtreep visible-only body-only ext-plist)
+  "Export current buffer as a PDF.
+
+If narrowing is active in the current buffer, only export its
+narrowed part.
+
+If a region is active, export that region.
+
+A non-nil optional argument ASYNC means the process should happen
+asynchronously.  The resulting file should be accessible through
+the `org-export-stack' interface.
+
+When optional argument SUBTREEP is non-nil, export the sub-tree
+at point, extracting information from the headline properties
+first.
+
+When optional argument VISIBLE-ONLY is non-nil, don't export
+contents of hidden elements.
+
+When optional argument BODY-ONLY is non-nil, only write code
+between \"\\begin{document}\" and \"\\end{document}\".
+
+EXT-PLIST, when provided, is a property list with external
+parameters overriding Org default settings, but still inferior to
+file-local settings.
+
+Return PDF file's name."
+  (interactive)
+  (let ((file (org-export-output-file-name ".tex" subtreep)))
+    (org-export-to-file 'moderncv file
+      async subtreep visible-only body-only ext-plist
+      (lambda (file) (org-latex-compile file)))))
+
+(provide 'ox-cv)
+;;; ox-cv ends here

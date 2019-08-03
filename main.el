@@ -14,7 +14,7 @@
 	("org" . "http://orgmode.org/elpa/")
 	("gnu" . "https://elpa.gnu.org/packages/")))
 
-(add-to-list 'load-path "~/.emacs.d/packages/")
+(add-to-list 'load-path "~/.emacs.d/personal/packages/")
 (package-initialize)
 
 
