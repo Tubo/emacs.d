@@ -59,7 +59,8 @@
 
 
 (use-package ox-cv
-  :init (require 'ox-cv)
+  :load-path "~/.emacs.d/personal/packages/"
+  :after ox
   )
 
 ;; MacOS settings

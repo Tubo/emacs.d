@@ -168,13 +168,38 @@ as a communication channel."
   (let* ((title (org-export-data (org-element-property :title headline) info))
          (from-date (or (org-element-property :FROM headline) (error "No FROM property provided for cventry %s" title)))
          (to-date (org-element-property :TO headline))
-         (date (format "%s--%s" from-date to-date))
+         (date (if (not to-date) (format "%s" from-date)
+                   (format "%s--%s" from-date to-date)))
          (employer (org-element-property :EMPLOYER headline))
          (location (or (org-element-property :LOCATION headline) ""))
          (note (or (org-element-property :NOTE headline) "")))
     (format "\\cventry{\\textbf{%s}}{%s}{%s}{%s}{%s}{%s}\n"
             date title employer location note contents)))
 
+(defun org-cv--format-cvitem (headline contents info)
+  "Format HEADLINE as as cvitem.
+CONTENTS holds the contents of the headline.  INFO is a plist used
+as a communication channel."
+  (let ((term (org-export-data (org-element-property :title headline) info)))
+    (format "\\cvitem{%s}{%s}\n"
+            term contents)))
+
+(defun org-cv--format-cvitemwithcomment (headline contents info)
+  "Format HEADLINE as as cvitemwithcomment.
+CONTENTS holds the contents of the headline.  INFO is a plist used
+as a communication channel."
+  (let* ((title (org-export-data (org-element-property :title headline) info))
+         (comment (or (org-element-property :COMMENT headline)
+                      (error "No COMMENT property provided for cvitemwithcomments %s" title)))
+         (style (plist-get info :cvstyle)))
+    (cond
+     ((equal style "banking") (format "\\cvitemwithcomment{%s}{%s}{%s}\n" title contents comment))
+     ((equal style "casual") (format "\\cvitemwithcomment{%s}{%s}{%s}\n" comment title contents))
+    )))
+
+;; todo: cvcolumn[width]{header}{content}
+;; todo: cvlistitem
+;; todo: cvdoubleitem
 
 ;;;; Headline
 (defun org-cv-headline (headline contents info)
@@ -186,8 +211,9 @@ as a communication channel."
                          (or (org-string-nw-p env) "block"))))
       (cond
        ;; is a cv entry
-       ((equal environment "cventry")
-        (org-cv--format-cventry headline contents info))
+       ((equal environment "cventry") (org-cv--format-cventry headline contents info))
+       ((equal environment "cvitem") (org-cv--format-cvitem headline contents info))
+       ((equal environment "cvitemwithcomment") (org-cv--format-cvitemwithcomment headline contents info))
        ((org-export-with-backend 'latex headline contents info))))))
 
 
