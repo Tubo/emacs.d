@@ -22,7 +22,6 @@
   (org-tag ((t (:height 0.7))))
   )
 
-
 (use-package worf
   :ensure t
   )
@@ -41,7 +40,6 @@
 
 (use-package org-variable-pitch
   :ensure t)
-
 
 (use-package ox-pandoc
   :disabled
@@ -67,7 +65,6 @@
 (use-package org
   :if (eq system-type 'darwin)
   :config
-  (setq org-default-notes-file "~/Library/Mobile Documents/iCloud~com~appsonthemove~beorg/Documents/org/inbox.org")
   :custom
   (org-variable-pitch-fixed-font "Andale Mono")
   :custom-face
