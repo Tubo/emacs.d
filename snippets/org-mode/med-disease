@@ -3,6 +3,9 @@
 # key: dt
 # --
 * $1
+:PROPERTIES:
+:ANKI_NOTE_TYPE: Pathology
+:END:
 ** Name
 $1$0
 ** Background

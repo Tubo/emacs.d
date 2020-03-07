@@ -6,19 +6,18 @@
 (setq gnutls-min-prime-bits 4096)
 
 
-;; Packages
+;; Packages repositories
 ;; ========
 (setq package-archives
       '(("melpa" . "https://melpa.org/packages/")
-	("melpa-stable" . "https://stable.melpa.org/packages/")
 	("org" . "http://orgmode.org/elpa/")
-	("gnu" . "https://elpa.gnu.org/packages/")))
-
+	("gnu" . "https://elpa.gnu.org/packages/"))
+      )
 (add-to-list 'load-path "~/.emacs.d/personal/packages/")
 (package-initialize)
 
 
-;; Fonts
+;; Fonts - depending on the OS
 ;; =====
 (cond ((eq system-type 'darwin)
        (progn
@@ -54,6 +53,9 @@
 ;; New shells shall spawn in side windows
 (add-to-list 'display-buffer-alist
              '("*eshell" (display-buffer-in-side-window) (side . bottom)))
+;; Scratch buffer default to org-mode
+(setq initial-major-mode 'org-mode)
+(setq initial-scratch-message "# This is a scratchpad.")
 
 ;; Good packages to start off with
 ;; ===============================
@@ -92,6 +94,7 @@
   :general
   ("C-x o" 'ace-window)
   )
+
 
 ;; Ivy / Swiper / Counsel
 ;; ======================
@@ -141,7 +144,7 @@
   :after evil
   :ensure t
   :config
-  (evil-collection-init '(help helpful custom diff-mode doc-view ediff elisp-mode elisp-refs epa eshell eww ibuffer imenu-list info package-menu popup term which-key))
+  (evil-collection-init)
   )
 (use-package evil-magit
   :ensure t)
@@ -149,105 +152,6 @@
 
 ;; Dired-related
 ;; =============
-(use-package dired
-  :general
-  ('normal dired-mode-map
-           "q" 'quit-window
-           "j" 'dired-next-line
-           "k" 'dired-previous-line
-           [mouse-2] 'dired-mouse-find-file-other-window
-           [follow-link] 'mouse-face
-           ;; Commands to mark or flag certain categories of files
-           "#" 'dired-flag-auto-save-files
-           "." 'dired-clean-directory
-           "~" 'dired-flag-backup-files
-           ;; Upper case keys (except !) for operating on the marked files
-           "A" 'dired-do-find-regexp
-           "C" 'dired-do-copy
-           "B" 'dired-do-byte-compile
-           "D" 'dired-do-delete
-           "H" 'dired-do-hardlink
-           "L" 'dired-do-load
-           "M" 'dired-do-chmod
-           "O" 'dired-do-chown
-           "P" 'dired-do-print
-           "Q" 'dired-do-find-regexp-and-replace
-           "R" 'dired-do-rename
-           "S" 'dired-do-symlink
-           "T" 'dired-do-touch
-           "X" 'dired-do-shell-command
-           "Z" 'dired-do-compress
-           "c" 'dired-do-compress-to
-           "!" 'dired-do-shell-command
-           "&" 'dired-do-async-shell-command
-           ;; Comparison commands
-           "=" 'dired-diff
-           ;; move to marked files
-           "M-{" 'dired-prev-marked-file
-           "M-}" 'dired-next-marked-file
-           "%" nil
-           "%u" 'dired-upcase
-           "%l" 'dired-downcase
-           "%d" 'dired-flag-files-regexp
-           "%g" 'dired-mark-files-containing-regexp
-           "%m" 'dired-mark-files-regexp
-           "%r" 'dired-do-rename-regexp
-           "%C" 'dired-do-copy-regexp
-           "%H" 'dired-do-hardlink-regexp
-           "%R" 'dired-do-rename-regexp
-           "%S" 'dired-do-symlink-regexp
-           "%&" 'dired-flag-garbage-files
-           ;; mark
-           "*" nil
-           "**" 'dired-mark-executables
-           "*/" 'dired-mark-directories
-           "*@" 'dired-mark-symlinks
-           "*%" 'dired-mark-files-regexp
-           "*(" 'dired-mark-sexp
-           "*." 'dired-mark-extension
-           "*O" 'dired-mark-omitted
-           "*c" 'dired-change-marks
-           "*s" 'dired-mark-subdir-files
-           "*m" 'dired-mark
-           "*u" 'dired-unmark
-           "*?" 'dired-unmark-all-files
-           "*!" 'dired-unmark-all-marks
-           "U" 'dired-unmark-all-marks
-           "* <delete>" 'dired-unmark-backward
-           "* C-n" 'dired-next-marked-file
-           "* C-p" 'dired-prev-marked-file
-           "*t" 'dired-toggle-marks
-           ;; Lower keys for commands not operating on all the marked files
-           "a" 'dired-find-alternate-file
-           "d" 'dired-flag-file-deletion
-           "C-m" 'dired-find-file
-           "gr" 'revert-buffer
-           "I" 'dired-maybe-insert-subdir
-           "J" 'dired-goto-file
-           "K" 'dired-do-kill-lines
-           "r" 'dired-do-redisplay
-           "m" 'dired-mark
-           "t" 'dired-toggle-marks
-           "u" 'dired-unmark            ; also "*u"
-           "W" 'browse-url-of-dired-file
-           "x" 'dired-do-flagged-delete
-           "Y" 'dired-copy-filename-as-kill
-           "+" 'dired-create-directory
-           ;; open
-           "RET" 'dired-find-file
-           "gO" 'dired-find-file-other-window
-           "go" 'dired-view-file
-           ;; sort and search
-           "o" 'dired-sort-toggle-or-edit
-           ;; moving
-           "gp" 'dired-prev-dirline
-           "gn" 'dired-next-dirline
-           "gu" 'dired-up-directory
-           "gd" 'dired-up-directory
-           ;; hiding
-           "(" 'dired-hide-details-mode
-           )
-  )
 (use-package dired-hacks-utils
   :ensure t)
 (use-package dired-open
@@ -256,7 +160,6 @@
   :ensure t
   :general
   ('normal dired-mode-map 
-           "i" 'dired-subtree-toggle
            "TAB" 'dired-subtree-cycle
            )
   )
@@ -292,14 +195,6 @@
     (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")
     )) 
 
-
-;; Ranger
-(use-package ranger
-  :disabled
-  :ensure t
-  :config
-  (ranger-override-dired-mode t)
-  )
 
 ;; Yasnippet
 ;; =========
@@ -356,11 +251,6 @@
   (which-key-mode))
 
 
-;; Hyperbole
-(use-package hyperbole
-  :disabled
-  :ensure t)
-
 ;; Load custom.el
 ;; ==============
 (setq custom-file (expand-file-name "personal/custom.el" user-emacs-directory))
@@ -372,6 +262,7 @@
 (use-package zenburn-theme
   :ensure t
   :config
+  (setq zenburn-scale-org-headlines t)
   (load-theme 'zenburn t)
   )
 (use-package smart-mode-line
