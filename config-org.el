@@ -3,9 +3,10 @@
   (add-hook 'org-mode-hook (lambda () (visual-line-mode 1)))
   (add-hook 'org-mode-hook (lambda () (org-variable-pitch-minor-mode 1)))
   (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
+  (add-hook 'org-mode-hook (lambda () (yas-minor-mode 1)))
   (setq org-clock-persist 'history)
   (org-clock-persistence-insinuate)
-  (setq org-refile-targets '((org-agenda-files :maxlevel . 1)
+  (setq org-refile-targets '(;; (org-agenda-files :maxlevel . 1)
                              (nil :maxlevel . 2)))
   (setq org-pretty-entities t)
   (setq org-use-sub-superscripts "{}")
@@ -21,11 +22,13 @@
   (org-level-1 ((t (:foreground "#DFAF8F"))))
   (org-level-2 ((t (:foreground "#BFEBBF"))))
   (org-level-3 ((t (:foreground "#7CB8BB"))))
+  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
   (org-special-keyword ((t (:height 0.8))))
   (org-tag ((t (:height 0.7))))
   )
 
 (use-package worf
+  :disabled
   :ensure t
   )
 
@@ -38,12 +41,50 @@
 
 
 (use-package org-pomodoro
+  :disabled
   :ensure t)
 
 
 (use-package org-variable-pitch
   :ensure t)
 
+(use-package org-drill
+  :disabled
+  :ensure
+  :requires ox
+  )
+
+(use-package org-brain
+  :disabled
+  :ensure t
+  :init
+  (setq org-brain-path "~/brain_test")
+  ;; For Evil users
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
+  :config
+  (setq org-id-track-globally t)
+  (setq org-id-locations-file "~/.emacs.d/.org-id-locations")
+  (push '("b" "Brain" plain (function org-brain-goto-end)
+          "* %i%?" :empty-lines 1)
+        org-capture-templates)
+  (setq org-brain-visualize-default-choices 'all)
+  (setq org-brain-title-max-length 12)
+  ;; Use headline entries only
+  (setq org-brain-include-file-entries nil
+        org-brain-headline-entry-name-format-string "%2$s"
+        org-brain-file-entries-use-title nil)
+  (setq my/default-org-brain-file "radiology"
+        org-brain-file-from-input-function
+        (lambda (x) (if (cdr x) (car x) my/default-org-brain-file)))
+  )
+
+(use-package org-noter
+  :ensure t)
+
+
+;; Org export backends
+;; ====================
 (use-package ox-pandoc
   :ensure t
   :custom
@@ -66,6 +107,8 @@
   :after ox
   )
 
+;; OS-specific settings
+;; ====================
 ;; MacOS settings
 (use-package org
   :if (eq system-type 'darwin)

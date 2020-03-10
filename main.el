@@ -91,8 +91,10 @@
 ;; ==========
 (use-package ace-window
   :ensure t
+  :config
+  (setq aw-scope 'frame)
   :general
-  ("C-x o" 'ace-window)
+  ("M-o" 'ace-window)
   )
 
 
@@ -249,6 +251,15 @@
   :ensure t
   :config
   (which-key-mode))
+
+;; PDF-tools
+(use-package pdf-tools
+  :ensure t
+  :config
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'pdf-view-mode 'emacs))
+  (setq pdf-view-use-scaling t) 
+  (pdf-loader-install))
 
 
 ;; Load custom.el

@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: ANKI: Q&A
+# key: qa
+# expand-env: ((yas-indent-line 'fixed))
+# --
+  :PROPERTIES:
+  :ANKI_NOTE_TYPE: Q&A
+  :ANKI_TAGS: Rad_Anatomy::basics$1
+  :END:
+`(make-string (1+ (org-current-level)) ?*)` Question
+How to approach $2
+`(make-string (1+ (org-current-level)) ?*)` Answer
+$0
+`(make-string (1+ (org-current-level)) ?*)` Comment
+`(make-string (1+ (org-current-level)) ?*)` Hint
