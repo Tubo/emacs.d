@@ -219,11 +219,6 @@
   )
 
 
-;; Org-mode related
-;; ================
-(load-relative "config-org.el")
-
-
 ;; Eyebrowse
 ;; =========
 (use-package eyebrowse
@@ -255,11 +250,21 @@
 ;; PDF-tools
 (use-package pdf-tools
   :ensure t
-  :config
+  :init
   (with-eval-after-load 'evil
     (evil-set-initial-state 'pdf-view-mode 'emacs))
+  :config
   (setq pdf-view-use-scaling t) 
-  (pdf-loader-install))
+  (pdf-loader-install)
+  :bind
+  (:map pdf-view-mode-map
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("j" . pdf-view-next-line-or-next-page))
+  )
+
+;; Org-mode related
+;; ================
+(load-relative "config-org.el")
 
 
 ;; Load custom.el
@@ -307,9 +312,10 @@
   "d" 'counsel-dired
   "e" 'counsel-find-file
   "g" 'magit-status
-  "k" 'kill-this-buffer
+  "k" 'kill-buffer-and-window
   "o" 'ace-window
   "s" 'eshell
+  "v" 'org-brain-visualize
   "1" 'eyebrowse-switch-to-window-config-1
   "2" 'eyebrowse-switch-to-window-config-2
   "3" 'eyebrowse-switch-to-window-config-3

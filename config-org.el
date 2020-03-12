@@ -80,7 +80,10 @@
   )
 
 (use-package org-noter
-  :ensure t)
+  :ensure t
+  :config
+  (add-hook 'org-noter-insert-heading-hook #'org-id-get-create) 
+  )
 
 
 ;; Org export backends
