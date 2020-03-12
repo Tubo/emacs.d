@@ -12,7 +12,7 @@
   (setq org-use-sub-superscripts "{}")
   (setq org-log-done 'time)
   (setq org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
-  (setq org-export-backends '())
+  (setq org-export-backends '(ascii))
   :custom
   (org-startup-indented t)
   (org-clock-persist 'history)  
@@ -32,6 +32,17 @@
   :ensure t
   )
 
+(use-package evil-org
+  :ensure t
+  :after org
+  :config
+  (add-hook 'org-mode-hook 'evil-org-mode)
+  (add-hook 'evil-org-mode-hook
+            (lambda ()
+              (evil-org-set-key-theme)))
+  (require 'evil-org-agenda)
+  (evil-org-agenda-set-keys)
+  )
 
 (use-package anki-editor
   :ensure t
