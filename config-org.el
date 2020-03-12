@@ -3,6 +3,7 @@
   (add-hook 'org-mode-hook (lambda () (visual-line-mode 1)))
   (add-hook 'org-mode-hook (lambda () (org-variable-pitch-minor-mode 1)))
   (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
+  (yas-reload-all)
   (add-hook 'org-mode-hook (lambda () (yas-minor-mode 1)))
   (setq org-clock-persist 'history)
   (org-clock-persistence-insinuate)
@@ -66,10 +67,11 @@
   )
 
 (use-package org-brain
-  :disabled
   :ensure t
+  :after org
   :init
-  (setq org-brain-path "~/brain_test")
+  (require 'org-capture)
+  (setq org-brain-path "~/Dropbox/med_notes")
   ;; For Evil users
   (with-eval-after-load 'evil
     (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
@@ -85,7 +87,7 @@
   (setq org-brain-include-file-entries nil
         org-brain-headline-entry-name-format-string "%2$s"
         org-brain-file-entries-use-title nil)
-  (setq my/default-org-brain-file "radiology"
+  (setq my/default-org-brain-file "mindmap"
         org-brain-file-from-input-function
         (lambda (x) (if (cdr x) (car x) my/default-org-brain-file)))
   )

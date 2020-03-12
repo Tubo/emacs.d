@@ -253,9 +253,9 @@
   :init
   (with-eval-after-load 'evil
     (evil-set-initial-state 'pdf-view-mode 'emacs))
+  (pdf-loader-install)
   :config
   (setq pdf-view-use-scaling t) 
-  (pdf-loader-install)
   :bind
   (:map pdf-view-mode-map
         ("k" . pdf-view-previous-line-or-previous-page)
@@ -333,8 +333,8 @@
   :keymaps 'org-mode-map
   "p" 'org-insert-link
   "r" 'org-refile
-  "s" 'org-narrow-to-subtree
-  "y" 'org-store-link
+  "c" 'anki-editor-cloze-dwim
+  "y" 'yas-insert-snippet
   )
 
 

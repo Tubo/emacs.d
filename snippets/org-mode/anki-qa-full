@@ -1,11 +1,11 @@
 # -*- mode: snippet -*-
-# name: ANKI: Q&A
+# name: Anki: Q&A -- full
 # key: qa
 # expand-env: ((yas-indent-line 'fixed))
 # --
   :PROPERTIES:
   :ANKI_NOTE_TYPE: Q&A
-  :ANKI_TAGS: Rad_Anatomy::basics$1
+  :ANKI_TAGS: Rad_Anatomy::Basics$1
   :END:
 `(make-string (1+ (org-current-level)) ?*)` Question
 How to approach $2
