@@ -1,18 +1,20 @@
 # -*- mode: snippet -*-
-# name: disease template
+# name: diagnosis (anki)
 # key: dt
 # --
 * $1
 :PROPERTIES:
 :ANKI_NOTE_TYPE: Pathology
+:ANKI_TAGS: Rad_Systems::
 :END:
-** Name
+** Terminology
 $1$0
 ** Background
-** Epidemiology
 ** Pathology
 ** Clinical features
 ** Investigation
+** Imaging
 ** Diagnosis
+** Differentials
 ** Management
 ** Comments
