@@ -198,7 +198,9 @@
 (use-package frame
   :ensure nil
   :config
-  (modify-all-frames-parameters '((width . 120) (height . 60)))
+  (modify-all-frames-parameters '((width . 120)
+                                  (height . 60)
+                                  (alpha . (95. 80))))
   (defun my-after-make-frame (&optional frame)
     (with-selected-frame (or frame (selected-frame))
       ;; use symbola font for emoticons
@@ -546,7 +548,8 @@
   :general ("S-<f11>" 'darkroom-tentative-mode)
   :custom
   (darkroom-text-scale-increase 1.5)
-  (darkroom-margins-if-failed-guess 0.1))
+  (darkroom-margins-if-failed-guess 0.05))
+
 
 
 
