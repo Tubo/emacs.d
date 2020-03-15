@@ -14,11 +14,16 @@
   (setq org-log-done 'time)
   (setq org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
   (setq org-export-backends '(ascii))
+
   :custom
   (org-startup-indented t)
+  (org-startup-with-inline-images t)
+  (org-image-actual-width nil)
+  (org-edit-src-content-indentation 0)
   (org-clock-persist 'history)  
   (org-agenda-todo-list-sublevels nil)
   (org-tags-column -100)
+
   :custom-face
   (org-level-1 ((t (:foreground "#DFAF8F"))))
   (org-level-2 ((t (:foreground "#BFEBBF"))))

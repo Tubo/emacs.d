@@ -11,26 +11,9 @@
 (setq package-archives
       '(("melpa" . "https://melpa.org/packages/")
 	("org" . "http://orgmode.org/elpa/")
-	("gnu" . "https://elpa.gnu.org/packages/"))
-      )
+	("gnu" . "https://elpa.gnu.org/packages/")))
 (add-to-list 'load-path "~/.emacs.d/personal/packages/")
 (package-initialize)
-
-
-;; Fonts - depending on the OS
-;; =====
-(cond ((eq system-type 'darwin)
-       (progn
-         (add-to-list 'default-frame-alist '(font . "Monaco"))
-         ))
-      ((eq system-type 'gnu/linux)
-       (progn
-         (add-to-list 'default-frame-alist '(font . "Source Code Variable"))
-         ))
-      ((eq system-type 'windows-nt)
-       (progn
-         (add-to-list 'default-frame-alist '(font . "Source Code Pro"))
-         )))
 
 
 ;; Initialise 'use-package and 'general
@@ -39,28 +22,90 @@
   (package-refresh-contents)
   (package-install 'use-package))
 (eval-when-compile (require 'use-package))
+
 (use-package general
   :ensure t)
 
 
 ;; Initial settings
 ;; ================
-(setq inhibit-default-init 't)
-(setq vc-follow-symlinks nil)
-(setq inhibit-splash-screen t
-      inhibit-startup-message t)
-(electric-pair-mode)
-;; New shells shall spawn in side windows
-(add-to-list 'display-buffer-alist
-             '("*eshell" (display-buffer-in-side-window) (side . bottom)))
-;; Scratch buffer default to org-mode
-(setq initial-major-mode 'org-mode)
-(setq initial-scratch-message "# This is a scratchpad.")
+(use-package my/settings
+  :ensure nil
+  :init
+  (setq
+   require-final-newline t
+   column-number-mode t
+   history-length 250
+   locale-coding-system 'utf-8
+   tab-always-indent 'complete
+   confirm-nonexistent-file-or-buffer nil
+   vc-follow-symlinks nil
+   recentf-max-saved-items 5000
+   kill-ring-max 5000
+   mark-ring-max 5000
+   mouse-autoselect-window -0.1
+   indicate-buffer-boundaries 'left
+   split-height-threshold 110
+   split-width-threshold 160
+   show-paren-delay 0
+   load-prefer-newer 5
+   eval-expression-print-length nil
+   eval-expression-print-level nil
+   custom-file (expand-file-name "personal/custom.el" user-emacs-directory)
+   inhibit-splash-screen t
+   inhibit-startup-message t
+   inhibit-default-init t)
+
+  ;; default flags
+  (setq-default
+   tab-width 4
+   indent-tabs-mode nil
+   c-basic-offset 4)
+
+  ;; disable full 'yes' and 'no' answers
+  (defalias 'yes-or-no-p 'y-or-n-p)
+
+  ;; New shells shall spawn in side windows
+  (add-to-list
+   'display-buffer-alist
+   '("*eshell" (display-buffer-in-side-window) (side . bottom)))
+
+  (provide 'my/settings)
+
+  :config
+
+  ;; mode-line time display
+  (setq display-time-24hr-format t
+        display-time-default-load-average nil
+        display-time-use-mail-icon t)
+  (display-time)
+
+  ;; encoding
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  (set-language-environment "UTF-8")
+  (prefer-coding-system 'utf-8)
+
+  ;; enable or disable modes
+  (electric-pair-mode)
+  (blink-cursor-mode -1)
+  (put 'narrow-to-region 'disabled nil)
+
+  ;; fonts - depending on the OS
+  (cond ((eq system-type 'darwin)
+         (progn (add-to-list 'default-frame-alist '(font . "Monaco"))))
+        ((eq system-type 'gnu/linux)
+         (progn (add-to-list 'default-frame-alist '(font . "Source Code Variable"))))
+        ((eq system-type 'windows-nt)
+         (progn (add-to-list 'default-frame-alist '(font . "Source Code Pro"))))))
+
+
 
 ;; Good packages to start off with
 ;; ===============================
 (use-package better-defaults
   :ensure t)
+
 (use-package load-relative
   :pin gnu
   :ensure t)
@@ -74,28 +119,103 @@
   :config
   (exec-path-from-shell-initialize))
 
+;; Eshell
+(use-package eshell
+  :demand
+  :hook ((eshell-mode . my-eshell-setup)
+         (eshell-mode . eldoc-mode))
+  :init
+  (setq eshell-save-history-on-exit t)
+  (setq eshell-destroy-buffer-when-process-dies t)
+  (setq eshell-where-to-jump 'begin)
+  (setq eshell-hist-ignoredups t)
+  (setq eshell-history-size 10000)
+  (defun my-eshell-setup ()
+    (setq-local eldoc-idle-delay 3)
+    (setenv "PAGER" "cat")
+    (setenv "EDITOR" "emacsclient"))
 
-;; Magit
+  :config
+  (use-package esh-help
+    :ensure t
+    :config (setup-esh-help-eldoc)))
+
+
+;; Version Control
 ;; =====
 (use-package magit
   :ensure t
+  :init
+  (setq magit-no-confirm '(stage-all-changes))
+  (setq magit-push-always-verify nil)
+  (setq git-commit-finish-query-functions nil)
+  (setq magit-save-some-buffers nil) ;don't ask to save buffers
+  (setq magit-set-upstream-on-push t) ;ask to set upstream
+  (setq magit-diff-refine-hunk 'all) ;show word-based diff for all hunks
+  (setq magit-default-tracking-name-function
+        'magit-default-tracking-name-branch-only) ;don't track with origin-*
   :general
-  (
-   "C-x g" 'magit-status
-   "C-x M-g" 'magit-dispatch
-   )
+  ("C-x g" 'magit-status
+   "C-x M-g" 'magit-dispatch))
+
+(use-package evil-magit
+  :ensure t
+  :after (magit evil))
+
+(use-package diff-hl
+  :ensure t
+  :config
+  (global-diff-hl-mode 1)
+  (eval-after-load 'magit
+    (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
   )
 
+(use-package autorevert
+  :hook (dired-mode . auto-vert-mode)
+  :config
+  (global-auto-revert-mode 1))
 
-;; Ace window
+
+
+;; Window navigation
 ;; ==========
 (use-package ace-window
   :ensure t
   :config
   (setq aw-scope 'frame)
   :general
-  ("M-o" 'ace-window)
-  )
+  ("M-o" 'ace-window))
+
+(use-package eyebrowse
+  :ensure t
+  :init
+  (setq eyebrowse-new-workspace t)
+  (setq eyebrowse-wrap-around t)
+  :config
+  (eyebrowse-mode t))
+
+;; multi-frame management independent of window systems
+(use-package frame
+  :ensure nil
+  :config
+  (modify-all-frames-parameters '((width . 120) (height . 60)))
+  (defun my-after-make-frame (&optional frame)
+    (with-selected-frame (or frame (selected-frame))
+      ;; use symbola font for emoticons
+      (when (find-font (font-spec :name "Symbola") frame)
+        (dolist (range '((#x2600 . #x26ff)
+                         (#x1f300 . #x1f5ff)
+                         (#x1f600 . #x1f640)
+                         (#x1f680 . #x1f6ff)))
+          (set-fontset-font "fontset-default" range "Symbola")))))
+  (add-to-list 'after-make-frame-functions 'my-after-make-frame)
+
+  ;; better frame title
+  (setq frame-title-format
+        '((:eval (if (buffer-file-name)
+                     (abbreviate-file-name (buffer-file-name))
+                   "%b")))))
+
 
 
 ;; Ivy / Swiper / Counsel
@@ -108,12 +228,8 @@
   :config
   (ivy-mode t)
   :general
-  (
-   "C-s" 'swiper
-   "C-c C-r" 'ivy-resume
-   )
-  )
-
+  ("C-s" 'swiper
+   "C-c C-r" 'ivy-resume))
 
 (use-package counsel
   :ensure t
@@ -123,14 +239,28 @@
   ("M-x" 'counsel-M-x
    "C-x C-f" 'counsel-find-file)
   (minibuffer-local-map
-   "C-r" 'counsel-minibuffer-history
-   )
-  )
+   "C-r" 'counsel-minibuffer-history))
+
 (use-package swiper
   :ensure t
   :general
-  ("C-s" 'swiper)
-  )
+  ("C-s" 'swiper))
+
+
+;; Project management
+;; ===============
+(use-package projectile
+  :ensure t
+  :init
+  (setq projectile-switch-project-action 'projectile-dired)
+  (setq projectile-completion-system 'ido)
+  (setq projectile-enable-caching t)
+  (setq projectile-mode-line '(:eval (format " <%s>" (projectile-project-name))))
+
+  :config
+  (projectile-global-mode 1))
+
+
 
 ;; Evil
 ;; ====
@@ -142,35 +272,93 @@
   :config
   (evil-mode t)
   )
+
 (use-package evil-collection
-  :after evil
+  :after (evil)
   :ensure t
   :config
-  (evil-collection-init)
-  )
-(use-package evil-magit
-  :ensure t)
+  (dolist (mode '(lispy))
+    (delq mode evil-collection-mode-list))
+  (evil-collection-init))
+
+
+;; Company
+;; ===============
+(use-package company
+  :ensure t
+  :init
+  (setq company-idle-delay 0.3
+        company-tooltip-limit 20
+        company-minimum-prefix-length 2)
+  :config
+  (setq tab-always-indent 'complete)
+  (defvar completion-at-point-functions-saved nil)
+
+  (defun company-indent-for-tab-command (&optional arg)
+    (interactive "P")
+    (let ((completion-at-point-functions-saved completion-at-point-functions)
+          (completion-at-point-functions '(company-complete-common-wrapper)))
+      (indent-for-tab-command arg)))
+
+  (defun company-complete-common-wrapper ()
+    (let ((completion-at-point-functions completion-at-point-functions-saved))
+      (company-complete-common)))
+
+  (global-company-mode 1)
+  (add-to-list 'company-backends 'company-dabbrev t)
+  (add-to-list 'company-backends 'company-ispell t)
+  (add-to-list 'company-backends 'company-files t)
+  (add-to-list 'company-begin-commands 'outshine-self-insert-command)
+  (setq company-backends (remove 'company-ropemacs company-backends))
+
+  (defun my-company-elisp-setup ()
+    (set (make-local-variable 'company-backends)
+         '((company-capf :with company-dabbrev-code))))
+
+  ;; Usage based completion sorting
+  (use-package company-statistics
+    :ensure t
+    :hook ((emacs-lisp-mode lisp-interaction-mode) . my-company-elisp-setup)
+    :config (company-statistics-mode)))
+
+;; Popup documentation for completion candidates
+(use-package company-quickhelp
+  :ensure t
+  :init
+  (setq company-quickhelp-use-propertized-text t)
+  (setq company-quickhelp-delay 1)
+  :config (company-quickhelp-mode 1))
+
 
 
 ;; Dired-related
 ;; =============
+(use-package dired
+  :ensure nil
+  :demand
+  :init
+  (setq dired-auto-revert-buffer t)
+  (setq dired-no-confirm
+        '(byte-compile chgrp chmod chown copy delete load move symlink))
+  (setq dired-deletion-confirmer (lambda (x) t)))
+
 (use-package dired-hacks-utils
   :ensure t)
+
 (use-package dired-open
   :ensure t)
+
 (use-package dired-subtree
   :ensure t
   :general
-  ('normal dired-mode-map 
-           "TAB" 'dired-subtree-cycle
-           )
-  )
+  ('normal dired-mode-map "TAB" 'dired-subtree-cycle))
+
 (use-package dired-filter
   :ensure t
   :general
   ('normal dired-mode-map
-           "f" 'dired-filter-mode)
-  )
+           "f" 'dired-filter-mode))
+
 (use-package dired-rainbow
   :ensure t
   :config
@@ -194,12 +382,12 @@
     (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
     (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
     (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
-    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")
-    )) 
+    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*"))) 
+
 
 
 ;; Yasnippet
-;; =========
+;; ===============
 (use-package yasnippet
   :ensure t
   :init
@@ -209,45 +397,161 @@
   )
 
 
-;; Elm
-;; ===
+
+;; Languages
+;; ===============
+;; Aggressively indent lines
+(use-package aggressive-indent
+  :ensure
+  :config
+  (global-aggressive-indent-mode 1))
+
+;; Display line numbers for programming languages
+(use-package display-line-numbers
+  :hook (prog-mode . display-line-numbers-mode))
+
+(use-package outshine
+  :ensure t
+  :commands outshine-hook-function
+  :hook ((outline-minor-mode . outshine-mode)
+         (emacs-lisp-mode . outline-minor-mode))
+  :init
+  (setq outshine-imenu-show-headlines-p nil))
+
+
+;;; Emacs Lisp
+(use-package lispy
+  :ensure t
+  :hook
+  (emacs-lisp-mode . lispy-mode ))
+
+(use-package lispyville
+  :ensure t
+  :diminish
+  :after lispy
+  :hook (lispy-mode . lispyville-mode)
+  :config
+  (lispyville-set-key-theme
+   '(operators c-w slurp/barf-lispy wrap prettify
+               additional additional-movement additional-insert
+               commentary)))
+
+(defun my/conditionally-enable-lispy ()
+  (when (eq this-command 'eval-expression)
+    (lispy-mode 1)))
+(add-hook 'minibuffer-setup-hook 'my/conditionally-enable-lispy)
+
+(use-package elisp-refs
+  :ensure t)
+
+(use-package elisp-slime-nav
+  :ensure t
+  :hook ((emacs-lisp-mode ielm-mode) . turn-on-elisp-slime-nav-mode))
+
+(use-package highlight-defined
+  :ensure t
+  :hook (emacs-lisp-mode . highlight-defined-mode))
+
+(use-package rainbow-delimiters
+  :ensure t
+  :hook (emacs-lisp-mode . rainbow-delimiters-mode))
+
+(use-package eldoc
+  :diminish
+  :init
+  (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
+  (add-hook 'lisp-interaction-mode-hook 'eldoc-mode))
+
+(use-package page-break-lines
+  ;; Display ^L page breaks as tidy horizontal lines
+  :ensure t
+  :config
+  (global-page-break-lines-mode))
+
+(use-package eval-sexp-fu
+  :ensure t
+  :general
+  (:keymaps 'lisp-interaction-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
+  (:keymaps 'emacs-lisp-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
+  :init
+  (setq eval-sexp-fu-flash-duration 0.4)
+  :config
+  (turn-on-eval-sexp-fu-flash-mode))
+
+(use-package ielm
+  :config
+  (add-hook 'inferior-emacs-lisp-mode-hook
+            (lambda ()
+              (turn-on-eldoc-mode))))
+
+(use-package ipretty
+  :ensure t
+  :config (ipretty-mode t))
+
+
+
+;;; Elm
 (use-package elm-mode
   :disabled
   :ensure t
   :init
-  (setq elm-tags-on-save t)
-  )
+  (setq elm-tags-on-save t))
 
 
-;; Eyebrowse
-;; =========
-(use-package eyebrowse
+;;; Json
+(use-package json-mode
   :ensure t
-  :init
-  (setq eyebrowse-new-workspace t)
-  (setq eyebrowse-wrap-around t)
-  :config
-  (eyebrowse-mode t))
+  :mode "\\.json\\'")
 
 
-;; Helpful
+;;; Org-mode
+(load-relative "config-org.el")
+
+
+
+;; Help and Debugging
 ;; =======
 (use-package helpful
   :ensure t
   :general
-  (
-   "C-h f" 'helpful-callable
+  ("C-h f" 'helpful-callable
    "C-h k" 'helpful-key
-   "C-h v" 'helpful-variable)
-  )
+   "C-h v" 'helpful-variable))
 
-;; Which-key
 (use-package which-key
   :ensure t
+  :custom
+  (which-key-show-docstrings 'docstring-only)
+  (which-key-max-description-length nil)
+  (which-key-side-window-max-height 0.75)
   :config
   (which-key-mode))
 
-;; PDF-tools
+(use-package discover-my-major
+  :ensure t
+  :init
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'makey-key-mode 'emacs))
+  :general ("C-h C-m" 'discover-my-major))
+
+
+;; Focus
+;; ===============
+(use-package darkroom
+  :ensure t
+  :general ("S-<f11>" 'darkroom-tentative-mode)
+  :custom
+  (darkroom-text-scale-increase 1.5)
+  (darkroom-margins-if-failed-guess 0.1))
+
+
+
+;; Documents
+;; ===============
 (use-package pdf-tools
   :ensure t
   :init
@@ -259,18 +563,14 @@
   :bind
   (:map pdf-view-mode-map
         ("k" . pdf-view-previous-line-or-previous-page)
-        ("j" . pdf-view-next-line-or-next-page))
-  )
+        ("j" . pdf-view-next-line-or-next-page)))
 
-;; Org-mode related
-;; ================
-(load-relative "config-org.el")
 
 
 ;; Load custom.el
 ;; ==============
-(setq custom-file (expand-file-name "personal/custom.el" user-emacs-directory))
 (load custom-file)
+
 
 
 ;; Theme
@@ -279,31 +579,42 @@
   :ensure t
   :config
   (setq zenburn-scale-org-headlines t)
-  (load-theme 'zenburn t)
-  )
+  (load-theme 'zenburn t))
+
 (use-package smart-mode-line
   :ensure t
   :init
-  (setq rm-blacklist
-        '(" counsel" " ivy" " WK" " ARev" " Undo-Tree" " ElDoc"
-          " BufFace" " Ind" " OVP" " Wrap" " Abbrev"))
+  (setq rm-whitelist '(" "))
   (setq sml/name-width 30)
+  (setq sml/vc-mode-show-backend t)
+  (setq sml/no-confirm-load-theme t)
   :config
   (sml/setup))
+
 (use-package smart-mode-line-powerline-theme
   :disabled
   :ensure t)
 
+(use-package shr
+  ;; increase contrast between similar colors
+  :custom
+  (shr-color-visible-luminance-min 60))
+
+(use-package hl-line
+  :hook ((dired-mode package-menu-mode prog-mode) . hl-line-mode))
+
+
 ;; Keybindings
 ;; ===========
-;; Custom keybindings
+
+;;; Custom keybindings
 (general-def
   "C-x k" 'kill-this-buffer)
 
 (general-create-definer my-leader-def
   :prefix "SPC")
 
-;; ** Global Keybindings
+;;; Global Keybindings
 (my-leader-def
   :keymaps 'normal
   "a" 'org-agenda
@@ -321,13 +632,13 @@
   "3" 'eyebrowse-switch-to-window-config-3
   "/" 'swiper
   "." 'org-pomodoro
- )
+  )
 
 
 (general-create-definer my-local-leader-def
   :prefix "SPC m")
 
-;; ** Mode Keybindings
+;;; Mode Keybindings
 (my-local-leader-def
   :states 'normal
   :keymaps 'org-mode-map
@@ -338,7 +649,7 @@
   )
 
 
-;; Org keybindings
+;;; Org keybindings
 (general-def
   "C-c l" 'org-store-link
   "C-c a" 'org-agenda
