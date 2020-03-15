@@ -25,8 +25,10 @@
 (use-package quelpa
   :ensure t
   :config
-  (setq quelpa-upgrade-interval 7
-        quelpa-self-upgrade-p nil))
+  :custom
+  (quelpa-upgrade-interval 7)
+  (quelpa-checkout-melpa-p nil)
+  (quelpa-self-upgrade-p nil))
 
 (use-package quelpa-use-package
   :ensure t)
@@ -207,18 +209,7 @@
   :config
   (modify-all-frames-parameters '((width . 120)
                                   (height . 60)
-                                  (alpha . (95. 80))))
-  (defun my-after-make-frame (&optional frame)
-    (with-selected-frame (or frame (selected-frame))
-      ;; use symbola font for emoticons
-      (when (find-font (font-spec :name "Symbola") frame)
-        (dolist (range '((#x2600 . #x26ff)
-                         (#x1f300 . #x1f5ff)
-                         (#x1f600 . #x1f640)
-                         (#x1f680 . #x1f6ff)))
-          (set-fontset-font "fontset-default" range "Symbola")))))
-  (add-to-list 'after-make-frame-functions 'my-after-make-frame)
-
+                                  (alpha . (98. 90))))
   ;; better frame title
   (setq frame-title-format
         '((:eval (if (buffer-file-name)
@@ -426,6 +417,13 @@
          (emacs-lisp-mode . outline-minor-mode))
   :init
   (setq outshine-imenu-show-headlines-p nil))
+
+(use-package highlight-thing
+  :ensure t
+  :hook (prog-mode . highlight-thing-mode)
+  :custom
+  (highlight-thing-limit-to-defun t)
+  (highlight-thing-exclude-thing-under-point t))
 
 
 ;;; Emacs Lisp
