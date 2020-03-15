@@ -1,17 +1,16 @@
-(defconst ts/initial-gc-cons-threshold gc-cons-threshold
+(defconst my/initial-gc-cons-threshold gc-cons-threshold
   "Initial value of `gc-cons-threshold' at start-up time.")
 (setq gc-cons-threshold (* 128 1024 1024))
 (add-hook 'after-init-hook
-          (lambda () (setq gc-cons-threshold ts/initial-gc-cons-threshold)))
+          (lambda () (setq gc-cons-threshold my/initial-gc-cons-threshold)))
 (setq gnutls-min-prime-bits 4096)
 
 
 ;; Packages repositories
 ;; ========
-(setq package-archives
-      '(("melpa" . "https://melpa.org/packages/")
-	("org" . "http://orgmode.org/elpa/")
-	("gnu" . "https://elpa.gnu.org/packages/")))
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("org" . "http://orgmode.org/elpa/")
+                         ("gnu" . "https://elpa.gnu.org/packages/")))
 (add-to-list 'load-path "~/.emacs.d/personal/packages/")
 (package-initialize)
 
@@ -22,6 +21,15 @@
   (package-refresh-contents)
   (package-install 'use-package))
 (eval-when-compile (require 'use-package))
+
+(use-package quelpa
+  :ensure t
+  :config
+  (setq quelpa-upgrade-interval 7
+        quelpa-self-upgrade-p nil))
+
+(use-package quelpa-use-package
+  :ensure t)
 
 (use-package general
   :ensure t)
@@ -167,8 +175,7 @@
   :config
   (global-diff-hl-mode 1)
   (eval-after-load 'magit
-    (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
-  )
+    (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)))
 
 (use-package autorevert
   :hook (dired-mode . auto-vert-mode)
@@ -633,9 +640,7 @@
   "1" 'eyebrowse-switch-to-window-config-1
   "2" 'eyebrowse-switch-to-window-config-2
   "3" 'eyebrowse-switch-to-window-config-3
-  "/" 'swiper
-  "." 'org-pomodoro
-  )
+  "/" 'swiper)
 
 
 (general-create-definer my-local-leader-def
@@ -648,8 +653,7 @@
   "p" 'org-insert-link
   "r" 'org-refile
   "c" 'anki-editor-cloze-dwim
-  "y" 'yas-insert-snippet
-  )
+  "y" 'yas-insert-snippet)
 
 
 ;;; Org keybindings
@@ -658,10 +662,9 @@
   "C-c a" 'org-agenda
   "C-c c" 'org-capture
   "C-c b" 'org-iswitchb
-  "C-'" 'org-cycle-agenda-files
-  )
+  "C-'" 'org-cycle-agenda-files)
+
 (general-def
   :keymaps 'org-mode-map
   "C-c C-q" 'counsel-org-tag
-  "M-i" 'counsel-imenu
-  )
+  "M-i" 'counsel-imenu)

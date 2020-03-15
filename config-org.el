@@ -5,38 +5,40 @@
   (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
   (yas-reload-all)
   (add-hook 'org-mode-hook (lambda () (yas-minor-mode 1)))
-  (setq org-clock-persist 'history)
   (org-clock-persistence-insinuate)
-  (setq org-refile-targets '(;; (org-agenda-files :maxlevel . 1)
-                             (nil :maxlevel . 2)))
-  (setq org-pretty-entities t)
-  (setq org-use-sub-superscripts "{}")
-  (setq org-log-done 'time)
-  (setq org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
-  (setq org-export-backends '(ascii))
-
+  (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "†")
+                                         ("#+END_SRC" . "†")
+                                         ("#+begin_src" . "†")
+                                         ("#+end_src" . "†")
+                                         (">=" . "≥")
+                                         ("=>" . "⇨")))
+  (setq prettify-symbols-unprettify-at-point 'right-edge)
+  (add-hook 'org-mode-hook 'prettify-symbols-mode)
   :custom
+  (org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
+  (org-refile-targets '((nil :maxlevel . 2)))
+  (org-clock-persist 'history)
+  (org-use-sub-superscripts "{}")
+  (org-log-done 'time)
+  (org-fontify-done-headline t)
+  (org-export-backends '(ascii))
+  (org-pretty-entities t)
   (org-startup-indented t)
   (org-startup-with-inline-images t)
   (org-image-actual-width nil)
   (org-edit-src-content-indentation 0)
+  (org-src-tab-acts-natively t)
   (org-clock-persist 'history)  
   (org-agenda-todo-list-sublevels nil)
-  (org-tags-column -100)
+  (org-tags-column -80)
+  (org-odd-levels-only nil)
 
   :custom-face
-  (org-level-1 ((t (:foreground "#DFAF8F"))))
-  (org-level-2 ((t (:foreground "#BFEBBF"))))
-  (org-level-3 ((t (:foreground "#7CB8BB"))))
-  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
+  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue" :family "Monaco"))))
   (org-special-keyword ((t (:height 0.8))))
   (org-tag ((t (:height 0.7))))
-  )
+  (org-ellipsis ((t (:underline nil :height 0.5)))))
 
-(use-package worf
-  :disabled
-  :ensure t
-  )
 
 (use-package evil-org
   :ensure t
@@ -47,14 +49,14 @@
             (lambda ()
               (evil-org-set-key-theme)))
   (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys)
-  )
+  (evil-org-agenda-set-keys))
+
 
 (use-package anki-editor
-  :ensure t
+  ;; use development branch of anki-editor
+  :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
   :custom
-  (anki-editor-create-decks t)
-  )
+  (anki-editor-create-decks t))
 
 
 (use-package org-pomodoro
@@ -63,13 +65,13 @@
 
 
 (use-package org-variable-pitch
-  :ensure t)
+  :ensure t
+  :hook (org-mode . org-variable-pitch-minor-mode))
 
 (use-package org-drill
   :disabled
   :ensure
-  :requires ox
-  )
+  :requires ox)
 
 (use-package org-brain
   :ensure t
@@ -100,8 +102,14 @@
 (use-package org-noter
   :ensure t
   :config
-  (add-hook 'org-noter-insert-heading-hook #'org-id-get-create) 
-  )
+  (add-hook 'org-noter-insert-heading-hook #'org-id-get-create))
+
+(use-package org-bullets
+  :ensure
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-ellipsis " ⤵")
+  (org-bullets-bullet-list '("✸" "◆" "◉" "○" "▶")))
 
 
 ;; Org export backends
