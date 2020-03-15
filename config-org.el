@@ -21,23 +21,30 @@
   (org-use-sub-superscripts "{}")
   (org-log-done 'time)
   (org-fontify-done-headline t)
-  (org-export-backends '(ascii))
+  (org-export-backends '(ascii html latex))
   (org-pretty-entities t)
   (org-startup-indented t)
   (org-startup-with-inline-images t)
-  (org-image-actual-width nil)
+  (org-image-actual-width '(500))
   (org-edit-src-content-indentation 0)
   (org-src-tab-acts-natively t)
   (org-clock-persist 'history)  
   (org-agenda-todo-list-sublevels nil)
   (org-tags-column -80)
   (org-odd-levels-only nil)
+  (org-ellipsis " ⤵")
 
   :custom-face
   (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue" :family "Monaco"))))
   (org-special-keyword ((t (:height 0.8))))
   (org-tag ((t (:height 0.7))))
+  (org-done ((t (:foreground "LightGreen"))))
   (org-ellipsis ((t (:underline nil :height 0.5)))))
+
+
+(use-package org-variable-pitch
+  :ensure t
+  :hook (org-mode . org-variable-pitch-minor-mode))
 
 
 (use-package evil-org
@@ -55,6 +62,7 @@
 (use-package anki-editor
   ;; use development branch of anki-editor
   :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
+  :hook (org-mode . anki-editor-mode)
   :custom
   (anki-editor-create-decks t))
 
@@ -63,10 +71,6 @@
   :disabled
   :ensure t)
 
-
-(use-package org-variable-pitch
-  :ensure t
-  :hook (org-mode . org-variable-pitch-minor-mode))
 
 (use-package org-drill
   :disabled
@@ -106,11 +110,20 @@
 
 (use-package org-bullets
   :ensure
+  :disabled
   :hook (org-mode . org-bullets-mode)
   :custom
-  (org-ellipsis " ⤵")
   (org-bullets-bullet-list '("✸" "◆" "◉" "○" "▶")))
 
+(use-package org-download
+  :ensure t
+  :demand
+  :hook (dired-mode . org-download-enable)
+  :custom
+  (org-download-display-inline-images nil)
+  (org-download-method 'directory)
+  (org-download-image-html-width 500)
+  (org-download-screenshot-method "screencapture -i %s"))
 
 ;; Org export backends
 ;; ====================

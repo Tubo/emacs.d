@@ -62,6 +62,7 @@
    eval-expression-print-length nil
    eval-expression-print-level nil
    custom-file (expand-file-name "personal/custom.el" user-emacs-directory)
+   abbrev-file-name (expand-file-name "personal/abbrev_defs" user-emacs-directory)
    inhibit-splash-screen t
    inhibit-startup-message t
    inhibit-default-init t)
@@ -144,7 +145,6 @@
     (setq-local eldoc-idle-delay 3)
     (setenv "PAGER" "cat")
     (setenv "EDITOR" "emacsclient"))
-
   :config
   (use-package esh-help
     :ensure t
@@ -180,7 +180,7 @@
     (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)))
 
 (use-package autorevert
-  :hook (dired-mode . auto-vert-mode)
+  :hook (dired-mode . auto-revert-mode)
   :config
   (global-auto-revert-mode 1))
 
@@ -193,7 +193,7 @@
   :config
   (setq aw-scope 'frame)
   :general
-  ("M-o" 'ace-window))
+  ("<f9>" 'ace-window))
 
 (use-package eyebrowse
   :ensure t
@@ -256,9 +256,11 @@
   (setq projectile-completion-system 'ido)
   (setq projectile-enable-caching t)
   (setq projectile-mode-line '(:eval (format " <%s>" (projectile-project-name))))
-
   :config
-  (projectile-global-mode 1))
+  (projectile-global-mode)
+  (setq projectile-completion-system 'ivy)
+  :general
+  ("C-c p" 'projectile-command-map))
 
 
 
@@ -290,6 +292,7 @@
   (setq company-idle-delay 0.3
         company-tooltip-limit 20
         company-minimum-prefix-length 2)
+  :hook (prog-mode . company-mode)
   :config
   (setq tab-always-indent 'complete)
   (defvar completion-at-point-functions-saved nil)
@@ -304,7 +307,6 @@
     (let ((completion-at-point-functions completion-at-point-functions-saved))
       (company-complete-common)))
 
-  (global-company-mode 1)
   (add-to-list 'company-backends 'company-dabbrev t)
   (add-to-list 'company-backends 'company-ispell t)
   (add-to-list 'company-backends 'company-files t)
@@ -535,6 +537,7 @@
   (which-key-show-docstrings 'docstring-only)
   (which-key-max-description-length nil)
   (which-key-side-window-max-height 0.75)
+  (which-key-idle-delay 2.0)
   :config
   (which-key-mode))
 
@@ -611,6 +614,9 @@
 (use-package hl-line
   :hook ((dired-mode package-menu-mode prog-mode) . hl-line-mode))
 
+(use-package rainbow-mode
+  :ensure t
+  :hook (emacs-lisp-mode css-mode js-mode text-mode))
 
 ;; Keybindings
 ;; ===========
@@ -633,6 +639,8 @@
   "g" 'magit-status
   "k" 'kill-buffer-and-window
   "o" 'ace-window
+  "p" 'projectile-command-map
+  "r" 'ivy-resume
   "s" 'eshell
   "v" 'org-brain-visualize
   "1" 'eyebrowse-switch-to-window-config-1
