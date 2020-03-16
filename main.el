@@ -340,6 +340,7 @@
   :demand
   :init
   (setq dired-auto-revert-buffer t)
+  (setq dired-listing-switches "-alh")
   (setq dired-no-confirm
         '(byte-compile chgrp chmod chown copy delete load move symlink))
   (setq dired-deletion-confirmer (lambda (x) t)))

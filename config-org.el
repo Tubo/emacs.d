@@ -61,7 +61,8 @@
 
 (use-package anki-editor
   ;; use development branch of anki-editor
-  :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
+  ;; :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
+  :ensure t
   :hook (org-mode . anki-editor-mode)
   :custom
   (anki-editor-create-decks t))
@@ -123,7 +124,8 @@
   (org-download-display-inline-images nil)
   (org-download-method 'directory)
   (org-download-image-html-width 500)
-  (org-download-screenshot-method "screencapture -i %s"))
+  (org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory))
+  (org-download-screenshot-method "screencapture -t 'jpg' -i %s"))
 
 ;; Org export backends
 ;; ====================
