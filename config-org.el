@@ -11,7 +11,7 @@
                                          ("#+begin_src" . "†")
                                          ("#+end_src" . "†")
                                          (">=" . "≥")
-                                         ("=>" . "⇨")))
+                                         ("=>" . "⟹")))
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (add-hook 'org-mode-hook 'prettify-symbols-mode)
   :custom
@@ -21,7 +21,7 @@
   (org-use-sub-superscripts "{}")
   (org-log-done 'time)
   (org-fontify-done-headline t)
-  (org-export-backends '(ascii html latex))
+  (org-export-backends '(ascii html latex org))
   (org-pretty-entities t)
   (org-startup-indented t)
   (org-startup-with-inline-images t)
