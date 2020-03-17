@@ -121,6 +121,14 @@
   :pin gnu
   :ensure t)
 
+(use-package super-save
+  :ensure t
+  :config
+  (setq auto-save-default nil)
+  (setq super-save-remote-files nil)
+  (setq super-save-auto-save-when-idle t)
+  (super-save-mode +1))
+
 ;; Emacs exec paths should be same as shells
 (use-package exec-path-from-shell
   :ensure t
