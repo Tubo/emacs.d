@@ -259,6 +259,7 @@
 ;; ===============
 (use-package projectile
   :ensure t
+  :demand
   :init
   (setq projectile-switch-project-action 'projectile-dired)
   (setq projectile-completion-system 'ido)
