@@ -20,7 +20,7 @@
   (org-clock-persist 'history)
   (org-use-sub-superscripts "{}")
   (org-log-done 'time)
-  (org-fontify-done-headline t)
+  (org-fontify-done-headline nil)
   (org-export-backends '(ascii html latex))
   (org-pretty-entities t)
   (org-startup-indented t)
