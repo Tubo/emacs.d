@@ -659,28 +659,26 @@
   "/" 'swiper)
 
 
-(general-create-definer my-local-leader-def
-  :prefix "SPC m")
+;;; Global Org keybindings
+(general-def
+  "C-c l" 'org-store-link
+  "C-c c" 'org-capture
+  "C-'" 'org-cycle-agenda-files)
 
-;;; Mode Keybindings
+
+(general-create-definer my-local-leader-def
+  :prefix "SPC SPC")
+
+;;; Local Org keybindings
 (my-local-leader-def
   :states 'normal
   :keymaps 'org-mode-map
   "p" 'org-insert-link
-  "r" 'org-refile
+  "r" 'avy-org-refile-as-child
+  "R" 'org-refile
   "c" 'anki-editor-cloze-dwim
+  "h" 'counsel-imenu
+  "t" 'counsel-org-tag
   "y" 'yas-insert-snippet)
 
 
-;;; Org keybindings
-(general-def
-  "C-c l" 'org-store-link
-  "C-c a" 'org-agenda
-  "C-c c" 'org-capture
-  "C-c b" 'org-iswitchb
-  "C-'" 'org-cycle-agenda-files)
-
-(general-def
-  :keymaps 'org-mode-map
-  "C-c C-q" 'counsel-org-tag
-  "M-i" 'counsel-imenu)
