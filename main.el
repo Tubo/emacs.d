@@ -418,6 +418,10 @@
   :config
   (global-aggressive-indent-mode 1))
 
+(use-package avy
+  ;; Jump to things in Emacs tree-style 
+  :ensure t)
+
 ;; Display line numbers for programming languages
 (use-package display-line-numbers
   :hook (prog-mode . display-line-numbers-mode))
@@ -651,12 +655,13 @@
   "o" 'ace-window
   "p" 'projectile-command-map
   "r" 'ivy-resume
-  "s" 'eshell
+  "s" 'swiper
   "v" 'org-brain-visualize
   "1" 'eyebrowse-switch-to-window-config-1
   "2" 'eyebrowse-switch-to-window-config-2
   "3" 'eyebrowse-switch-to-window-config-3
-  "/" 'swiper)
+  "/" 'avy-goto-char-timer
+  "\\" 'eshell)
 
 
 (general-create-definer my-local-leader-def
