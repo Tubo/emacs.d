@@ -37,10 +37,14 @@
   :ensure t)
 
 
-;; Initial settings
+
+
+
+;; Built-in settings
 ;; ================
 (use-package my/settings
   :ensure nil
+  ;; ===== INITIAL =====
   :init
   (setq
    locale-coding-system 'utf-8
@@ -66,11 +70,9 @@
    inhibit-splash-screen t
    inhibit-startup-message t
    inhibit-default-init t
-   mac-command-modifier 'meta 
+   mac-command-modifier 'meta
    mac-option-modifier 'super
    mac-control-modifier 'control)
-
-  ;; default flags
   (setq-default
    tab-width 4
    indent-tabs-mode nil
@@ -86,6 +88,7 @@
 
   (provide 'my/settings)
 
+  ;; ===== CONFIGURATIONS =====
   :config
 
   ;; mode-line time display
@@ -112,11 +115,13 @@
 
   (add-hook 'compilation-filter-hook #'my/colorize-compilation)
 
+  ;; stop truncate lines in prog-mode
+  (add-hook 'prog-mode-hook 'toggle-truncate-lines)
+
   ;; enable or disable modes
   (electric-pair-mode +1)
   (blink-cursor-mode -1)
   (put 'narrow-to-region 'disabled nil)
-  (toggle-truncate-lines -1)
 
   ;; fonts - depending on the OS
   (cl-case system-type
@@ -125,17 +130,22 @@
     (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro")))))
 
 
+
 
-;; Good packages to start off with
-;; ===============================
+
 (use-package better-defaults
+  ;; Disables menu-bar, tool-bar and scroll-bar
+  ;; Changes backup dir
+  ;; Misc changes
   :ensure t)
 
 (use-package load-relative
+  ;; Load ELisp file using relative location
   :pin gnu
   :ensure t)
 
 (use-package super-save
+  ;; Autosave
   :ensure t
   :config
   (setq auto-save-default nil)
@@ -143,8 +153,14 @@
   (setq super-save-auto-save-when-idle t)
   (super-save-mode +1))
 
-;; Emacs exec paths should be same as shells
+
+
+
+
+;; Shell
+;; ======
 (use-package exec-path-from-shell
+  ;; Emacs exec paths should be same as shells
   :ensure t
   :when (memq window-system '(mac ns x))
   :init
@@ -152,7 +168,6 @@
   :config
   (exec-path-from-shell-initialize))
 
-;; Eshell
 (use-package eshell
   :demand
   :hook ((eshell-mode . my-eshell-setup)
@@ -173,9 +188,11 @@
     :config (setup-esh-help-eldoc)))
 
 
+
+
 
 ;; Version Control
-;; =====
+;; ==========
 (use-package magit
   :ensure t
   :init
@@ -189,6 +206,7 @@
         'magit-default-tracking-name-branch-only) ;don't track with origin-*
   :general
   ("C-x g" 'magit-status
+   "<f1>" 'magit-status
    "C-x M-g" 'magit-dispatch))
 
 (use-package evil-magit
@@ -208,6 +226,8 @@
   (global-auto-revert-mode 1))
 
 
+
+
 
 ;; Window navigation
 ;; ==========
@@ -216,6 +236,7 @@
   :config
   (setq aw-scope 'frame)
   :general
+  ("s-o" 'ace-window)
   ("<f9>" 'ace-window))
 
 (use-package eyebrowse
@@ -240,8 +261,10 @@
                    "%b")))))
 
 
+
 
-;; Ivy / Swiper / Counsel
+
+;; File, buffer and pointer navigation
 ;; ======================
 (use-package ivy
   :ensure t
@@ -269,6 +292,13 @@
   :general
   ("C-s" 'swiper))
 
+(use-package avy
+  ;; Jump to things in Emacs tree-style
+  :ensure t)
+
+
+
+
 
 ;; Project management
 ;; ===============
@@ -286,6 +316,11 @@
   :general
   ("C-c p" 'projectile-command-map))
 
+(use-package counsel-projectile
+  :ensure t)
+
+
+
 
 
 ;; Evil
@@ -307,7 +342,10 @@
   (evil-collection-init))
 
 
-;; Company
+
+
+
+;; Auto-completion
 ;; ===============
 (use-package company
   :ensure t
@@ -356,8 +394,10 @@
   (company-quickhelp-mode 1))
 
 
+
 
-;; Dired-related
+
+;; File organisation
 ;; =============
 (use-package dired
   :ensure nil
@@ -408,36 +448,34 @@
   (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
   (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
   (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
-  (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")) 
+  (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*"))
 
 
 
-;; Yasnippet
+
+
+
+;; Snippets
 ;; ===============
 (use-package yasnippet
   :ensure t
   :init
-  (setq yas-snippet-dirs
-        `(,(expand-file-name "personal/snippets" user-emacs-directory))
-        )
-  )
+  (setq yas-snippet-dirs `(,(expand-file-name "personal/snippets" user-emacs-directory))))
 
 
+
 
-;; Languages
+
+;; General programming
 ;; ===============
-;; Aggressively indent lines
 (use-package aggressive-indent
+  ;; Aggressively indent lines
   :ensure
   :config
   (global-aggressive-indent-mode 1))
 
-(use-package avy
-  ;; Jump to things in Emacs tree-style 
-  :ensure t)
-
-;; Display line numbers for programming languages
 (use-package display-line-numbers
+  ;; Display line numbers for programming languages
   :hook (prog-mode . display-line-numbers-mode))
 
 (use-package outshine
@@ -456,7 +494,11 @@
   (highlight-thing-exclude-thing-under-point t))
 
 
-;;; Emacs Lisp
+
+
+
+;; Emacs Lisp
+;; ==========
 (use-package lispy
   :ensure t
   :hook
@@ -532,8 +574,11 @@
   :config (ipretty-mode t))
 
 
+
 
-;;; Elm
+
+;; Elm
+;; =====
 (use-package elm-mode
   :disabled
   :ensure t
@@ -541,19 +586,48 @@
   (setq elm-tags-on-save t))
 
 
-;;; Json
+
+
+
+;; Json
+;; =====
 (use-package json-mode
   :ensure t
   :mode "\\.json\\'")
 
 
-;;; Org-mode
+
+
+
+;; Documents
+;; ===============
+(use-package pdf-tools
+  :ensure t
+  :init
+  (with-eval-after-load 'evil
+    (evil-set-initial-state 'pdf-view-mode 'emacs))
+  (pdf-loader-install)
+  :config
+  (setq pdf-view-use-scaling t)
+  :bind
+  (:map pdf-view-mode-map
+        ("k" . pdf-view-previous-line-or-previous-page)
+        ("j" . pdf-view-next-line-or-next-page)))
+
+
+
+
+
+;; Org-mode
+;; ==========
 (load-relative "config-org.el")
 
 
+
 
-;; Help and Debugging
-;; =======
+
+;; References
+;; ============
 (use-package helpful
   :ensure t
   :general
@@ -579,6 +653,9 @@
   :general ("C-h C-m" 'discover-my-major))
 
 
+
+
+
 ;; Focus
 ;; ===============
 (use-package darkroom
@@ -589,29 +666,15 @@
   (darkroom-margins-if-failed-guess 0.05))
 
 
-
-
-;; Documents
-;; ===============
-(use-package pdf-tools
-  :ensure t
-  :init
-  (with-eval-after-load 'evil
-    (evil-set-initial-state 'pdf-view-mode 'emacs))
-  (pdf-loader-install)
-  :config
-  (setq pdf-view-use-scaling t) 
-  :bind
-  (:map pdf-view-mode-map
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("j" . pdf-view-next-line-or-next-page)))
-
+
 
 
 ;; Load custom.el
 ;; ==============
 (load custom-file)
 
+
+
 
 
 ;; Theme
@@ -650,8 +713,14 @@
   :ensure t
   :hook (emacs-lisp-mode css-mode js-mode text-mode))
 
-(use-package all-the-icons
-  :ensure t)
+(use-package all-the-icons)
+(use-package all-the-icons-ivy
+  :ensure t
+  :init
+  (all-the-icons-ivy-setup))
+
+
+
 
 
 ;; Keybindings
@@ -664,8 +733,8 @@
 (general-create-definer my-leader-def
   :prefix "SPC")
 
-;;; Global Keybindings
 (my-leader-def
+  ;; Global Keybindings
   :keymaps 'normal
   "a" 'org-agenda
   "b" 'ivy-switch-buffer
@@ -675,9 +744,11 @@
   "g" 'magit-status
   "k" 'kill-buffer-and-window
   "o" 'ace-window
-  "p" 'projectile-command-map
+  "p" 'counsel-projectile
+  "P" 'projectile-command-map
   "r" 'ivy-resume
   "s" 'swiper
+  "S" 'counsel-ag
   "v" 'org-brain-visualize
   "1" 'eyebrowse-switch-to-window-config-1
   "2" 'eyebrowse-switch-to-window-config-2
@@ -685,12 +756,12 @@
   "/" 'avy-goto-char-timer
   "\\" 'eshell)
 
-;; Local mode keybinding
 (general-create-definer my-local-leader-def
+  ;; Local keybindings
   :prefix "SPC SPC")
 
-;;; Local Org keybindings
 (my-local-leader-def
+  ;; Org-mode
   :states 'normal
   :keymaps 'org-mode-map
   "p" 'org-insert-link
@@ -702,6 +773,7 @@
   "y" 'yas-insert-snippet)
 
 (my-local-leader-def
+  ;; Emacs Lisp mode
   :states '(normal visual)
   :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
   ","  #'lispyville-comment-or-uncomment
@@ -710,4 +782,4 @@
   "(" #'lispyville-wrap-round)
 
 
-
+

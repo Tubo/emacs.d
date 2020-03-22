@@ -14,6 +14,7 @@
                                          ("=>" . "⟹")))
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (add-hook 'org-mode-hook 'prettify-symbols-mode)
+
   :custom
   (org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
   (org-refile-targets '((nil :maxlevel . 2)))
@@ -47,10 +48,12 @@
    "C-'" 'org-cycle-agenda-files))
 
 
+
+
+
 (use-package org-variable-pitch
   :ensure t
   :hook (org-mode . org-variable-pitch-minor-mode))
-
 
 (use-package evil-org
   :ensure t
@@ -63,7 +66,6 @@
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 
-
 (use-package anki-editor
   ;; use development branch of anki-editor
   ;; :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
@@ -72,11 +74,9 @@
   :custom
   (anki-editor-create-decks t))
 
-
 (use-package org-pomodoro
   :disabled
   :ensure t)
-
 
 (use-package org-drill
   :disabled
@@ -106,8 +106,7 @@
         org-brain-file-entries-use-title nil)
   (setq my/default-org-brain-file "mindmap"
         org-brain-file-from-input-function
-        (lambda (x) (if (cdr x) (car x) my/default-org-brain-file)))
-  )
+        (lambda (x) (if (cdr x) (car x) my/default-org-brain-file))))
 
 (use-package org-noter
   :ensure t
@@ -132,6 +131,10 @@
   (org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory))
   (org-download-screenshot-method "screencapture -t 'jpg' -i %s"))
 
+
+
+
+
 ;; Org export backends
 ;; ====================
 (use-package ox-pandoc
@@ -141,48 +144,44 @@
    '((120 "to docx and open." org-pandoc-export-to-docx-and-open)
      (88 "to docx." org-pandoc-export-to-docx)
      (?k "to markdown." org-pandoc-export-to-markdown)
-     (?K "to markdown and open." org-pandoc-export-to-markdown-and-open)
-     )))
-
+     (?K "to markdown and open." org-pandoc-export-to-markdown-and-open))))
 
 (use-package ox-hugo
   :disabled
   :ensure t
   :after ox)
 
-
 (use-package ox-cv
   :load-path "~/.emacs.d/personal/packages/"
-  :after ox
-  )
+  :after ox)
+
+
+
+
 
 ;; OS-specific settings
 ;; ====================
-;; MacOS settings
 (use-package org
+  ;; MacOS settings
   :if (eq system-type 'darwin)
   :config
   :custom
   (org-variable-pitch-fixed-font "Andale Mono")
   :custom-face
-  (variable-pitch ((t (:height 1.2 :family "Avenir Next"))))
-  )
+  (variable-pitch ((t (:height 1.2 :family "Avenir Next")))))
 
-;; Linux settings
 (use-package org
+  ;; Linux settings
   :if (eq system-type 'gnu/linux)
   :custom
   (org-variable-pitch-fixed-font "Sourse Code Variable")
   :custom-face
-  (variable-pitch ((t (:height 1.2 :family "Noto Sans"))))
-  )
+  (variable-pitch ((t (:height 1.2 :family "Noto Sans")))))
 
-
-;; Windows settings
 (use-package org
+  ;; Windows settings
   :if (eq system-type 'windows-nt)
   :custom
   (org-variable-pitch-fixed-font "Sourse Code Variable")
   :custom-face
-  (variable-pitch ((t (:height 1.2 :family "DejaVu Sans"))))
-  )
+  (variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))
