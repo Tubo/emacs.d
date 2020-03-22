@@ -39,7 +39,12 @@
   (org-special-keyword ((t (:height 0.8))))
   (org-tag ((t (:height 0.7))))
   (org-done ((t (:foreground "LightGreen"))))
-  (org-ellipsis ((t (:underline nil :height 0.5)))))
+  (org-ellipsis ((t (:underline nil :height 0.5))))
+
+  :general
+  ("C-c l" 'org-store-link
+   "C-c c" 'org-capture
+   "C-'" 'org-cycle-agenda-files))
 
 
 (use-package org-variable-pitch

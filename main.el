@@ -43,10 +43,10 @@
   :ensure nil
   :init
   (setq
+   locale-coding-system 'utf-8
    require-final-newline t
    column-number-mode t
    history-length 250
-   locale-coding-system 'utf-8
    tab-always-indent 'complete
    confirm-nonexistent-file-or-buffer nil
    vc-follow-symlinks nil
@@ -65,7 +65,10 @@
    abbrev-file-name (expand-file-name "personal/abbrev_defs" user-emacs-directory)
    inhibit-splash-screen t
    inhibit-startup-message t
-   inhibit-default-init t)
+   inhibit-default-init t
+   mac-command-modifier 'meta 
+   mac-option-modifier 'super
+   mac-control-modifier 'control)
 
   ;; default flags
   (setq-default
@@ -90,25 +93,36 @@
         display-time-default-load-average nil
         display-time-use-mail-icon t)
   (display-time)
+  (size-indication-mode)
 
   ;; encoding
+  (set-default-coding-systems 'utf-8)
   (set-terminal-coding-system 'utf-8)
   (set-keyboard-coding-system 'utf-8)
   (set-language-environment "UTF-8")
   (prefer-coding-system 'utf-8)
 
+  ;; hide escape sequences (ANSI-colors) in compilation buffers
+  (require 'ansi-color)
+  (defun my/colorize-compilation ()
+    "Colorize from `compilation-filter-start' to `point'."
+    (let ((inhibit-read-only t))
+      (ansi-color-apply-on-region
+       compilation-filter-start (point))))
+
+  (add-hook 'compilation-filter-hook #'my/colorize-compilation)
+
   ;; enable or disable modes
-  (electric-pair-mode)
+  (electric-pair-mode +1)
   (blink-cursor-mode -1)
   (put 'narrow-to-region 'disabled nil)
+  (toggle-truncate-lines -1)
 
   ;; fonts - depending on the OS
-  (cond ((eq system-type 'darwin)
-         (progn (add-to-list 'default-frame-alist '(font . "Monaco"))))
-        ((eq system-type 'gnu/linux)
-         (progn (add-to-list 'default-frame-alist '(font . "Source Code Variable"))))
-        ((eq system-type 'windows-nt)
-         (progn (add-to-list 'default-frame-alist '(font . "Source Code Pro"))))))
+  (cl-case system-type
+    (darwin (add-to-list 'default-frame-alist '(font . "Monaco")))
+    (gnu/linux (add-to-list 'default-frame-alist '(font . "Source Code Variable")))
+    (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro")))))
 
 
 
@@ -159,6 +173,7 @@
     :config (setup-esh-help-eldoc)))
 
 
+
 ;; Version Control
 ;; =====
 (use-package magit
@@ -167,8 +182,8 @@
   (setq magit-no-confirm '(stage-all-changes))
   (setq magit-push-always-verify nil)
   (setq git-commit-finish-query-functions nil)
-  (setq magit-save-some-buffers nil) ;don't ask to save buffers
-  (setq magit-set-upstream-on-push t) ;ask to set upstream
+  (setq magit-save-some-buffers nil)    ;don't ask to save buffers
+  (setq magit-set-upstream-on-push t)   ;ask to set upstream
   (setq magit-diff-refine-hunk 'all) ;show word-based diff for all hunks
   (setq magit-default-tracking-name-function
         'magit-default-tracking-name-branch-only) ;don't track with origin-*
@@ -281,8 +296,7 @@
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
   :config
-  (evil-mode t)
-  )
+  (evil-mode t))
 
 (use-package evil-collection
   :after (evil)
@@ -338,7 +352,8 @@
   :init
   (setq company-quickhelp-use-propertized-text t)
   (setq company-quickhelp-delay 1)
-  :config (company-quickhelp-mode 1))
+  :config
+  (company-quickhelp-mode 1))
 
 
 
@@ -374,27 +389,26 @@
 (use-package dired-rainbow
   :ensure t
   :config
-  (progn
-    (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
-    (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
-    (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
-    (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
-    (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
-    (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
-    (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
-    (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
-    (dired-rainbow-define log "#c17d11" ("log"))
-    (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
-    (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
-    (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
-    (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
-    (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
-    (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
-    (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
-    (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
-    (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
-    (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
-    (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*"))) 
+  (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
+  (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
+  (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
+  (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
+  (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
+  (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
+  (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
+  (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
+  (dired-rainbow-define log "#c17d11" ("log"))
+  (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
+  (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
+  (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
+  (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
+  (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
+  (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
+  (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
+  (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
+  (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
+  (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
+  (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*")) 
 
 
 
@@ -450,14 +464,12 @@
 
 (use-package lispyville
   :ensure t
-  :diminish
   :after lispy
   :hook (lispy-mode . lispyville-mode)
   :config
   (lispyville-set-key-theme
-   '(operators c-w slurp/barf-lispy wrap prettify
-               additional additional-movement additional-insert
-               commentary)))
+   '(operators c-w slurp/barf-lispy wrap prettify text-objects
+               commentary additional additional-insert)))
 
 (defun my/conditionally-enable-lispy ()
   (when (eq this-command 'eval-expression)
@@ -480,10 +492,9 @@
   :hook (emacs-lisp-mode . rainbow-delimiters-mode))
 
 (use-package eldoc
-  :diminish
   :init
-  (add-hook 'emacs-lisp-mode-hook 'eldoc-mode)
-  (add-hook 'lisp-interaction-mode-hook 'eldoc-mode))
+  :hook (emacs-lisp-mode . eldoc-mode)
+  :hook (lisp-interaction-mode-hook . eldoc-mode))
 
 (use-package page-break-lines
   ;; Display ^L page breaks as tidy horizontal lines
@@ -504,6 +515,11 @@
   (setq eval-sexp-fu-flash-duration 0.4)
   :config
   (turn-on-eval-sexp-fu-flash-mode))
+
+(use-package eros
+  :ensure t
+  :hook (emacs-lisp-mode . eros-mode )
+  :hook (lisp-interaction-mode . eros-mode))
 
 (use-package ielm
   :config
@@ -609,12 +625,14 @@
 (use-package smart-mode-line
   :ensure t
   :init
-  (setq rm-whitelist '(" "))
+  (setq rm-whitelist '(" LYVLE"))
   (setq sml/name-width 30)
   (setq sml/vc-mode-show-backend t)
   (setq sml/no-confirm-load-theme t)
   :config
-  (sml/setup))
+  (sml/setup)
+  :custom
+  (rm-text-properties '(("LYVLE" 'display " 🍰"))))
 
 (use-package smart-mode-line-powerline-theme
   :disabled
@@ -631,6 +649,10 @@
 (use-package rainbow-mode
   :ensure t
   :hook (emacs-lisp-mode css-mode js-mode text-mode))
+
+(use-package all-the-icons
+  :ensure t)
+
 
 ;; Keybindings
 ;; ===========
@@ -663,14 +685,7 @@
   "/" 'avy-goto-char-timer
   "\\" 'eshell)
 
-
-;;; Global Org keybindings
-(general-def
-  "C-c l" 'org-store-link
-  "C-c c" 'org-capture
-  "C-'" 'org-cycle-agenda-files)
-
-
+;; Local mode keybinding
 (general-create-definer my-local-leader-def
   :prefix "SPC SPC")
 
@@ -685,5 +700,14 @@
   "h" 'counsel-imenu
   "t" 'counsel-org-tag
   "y" 'yas-insert-snippet)
+
+(my-local-leader-def
+  :states '(normal visual)
+  :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
+  ","  #'lispyville-comment-or-uncomment
+  "."  #'lispyville-comment-and-clone-dwim
+  "ci" #'lispyville-comment-or-uncomment-line
+  "(" #'lispyville-wrap-round)
+
 
 
