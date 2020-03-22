@@ -245,7 +245,17 @@
   (setq eyebrowse-new-workspace t)
   (setq eyebrowse-wrap-around t)
   :config
-  (eyebrowse-mode t))
+  (eyebrowse-mode t)
+  :general
+  ("M-1" 'eyebrowse-switch-to-window-config-1)
+  ("M-2" 'eyebrowse-switch-to-window-config-2)
+  ("M-3" 'eyebrowse-switch-to-window-config-3)
+  ("M-4" 'eyebrowse-switch-to-window-config-4)
+  ("M-5" 'eyebrowse-switch-to-window-config-5)
+  ("M-6" 'eyebrowse-switch-to-window-config-6)
+  ("M-7" 'eyebrowse-switch-to-window-config-7)
+  ("M-8" 'eyebrowse-switch-to-window-config-8)
+  ("M-9" 'eyebrowse-switch-to-window-config-9))
 
 ;; multi-frame management independent of window systems
 (use-package frame
@@ -462,6 +472,8 @@
   :init
   (setq yas-snippet-dirs `(,(expand-file-name "personal/snippets" user-emacs-directory))))
 
+(use-package auto-yasnippet
+  :ensure t)
 
 
 
@@ -492,6 +504,10 @@
   :custom
   (highlight-thing-limit-to-defun t)
   (highlight-thing-exclude-thing-under-point t))
+
+(use-package format-all
+  :ensure t
+  :hook (prog-mode . format-all-mode))
 
 
 
@@ -663,7 +679,11 @@
   :general ("S-<f11>" 'darkroom-tentative-mode)
   :custom
   (darkroom-text-scale-increase 1.5)
-  (darkroom-margins-if-failed-guess 0.05))
+  (darkroom-margins-if-failed-guess 0.00))
+
+(use-package writeroom-mode
+  :ensure t
+  :general ("<f11>" 'writeroom-mode))
 
 
 
@@ -742,17 +762,18 @@
   "d" 'counsel-dired
   "e" 'counsel-find-file
   "g" 'magit-status
+  "h w" 'aya-create
+  "h y" 'aya-expand
   "k" 'kill-buffer-and-window
-  "o" 'ace-window
   "p" 'counsel-projectile
   "P" 'projectile-command-map
   "r" 'ivy-resume
   "s" 'swiper
   "S" 'counsel-ag
   "v" 'org-brain-visualize
-  "1" 'eyebrowse-switch-to-window-config-1
-  "2" 'eyebrowse-switch-to-window-config-2
-  "3" 'eyebrowse-switch-to-window-config-3
+  "1" 'delete-other-windows
+  "2" 'ivy-switch-buffer-other-window
+  "3" 'switch-to-buffer-other-frame
   "/" 'avy-goto-char-timer
   "\\" 'eshell)
 
@@ -768,9 +789,9 @@
   "r" 'avy-org-refile-as-child
   "R" 'org-refile
   "c" 'anki-editor-cloze-dwim
-  "h" 'counsel-imenu
+  "i" 'counsel-imenu
   "t" 'counsel-org-tag
-  "y" 'yas-insert-snippet)
+  "h" 'yas-insert-snippet)
 
 (my-local-leader-def
   ;; Emacs Lisp mode
