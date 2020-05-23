@@ -120,12 +120,13 @@
 
   ;; enable or disable modes
   (electric-pair-mode +1)
-  (blink-cursor-mode -1)
+  (blink-cursor-mode +1)
   (put 'narrow-to-region 'disabled nil)
 
   ;; fonts - depending on the OS
   (cl-case system-type
-    (darwin (add-to-list 'default-frame-alist '(font . "Monaco")))
+    (darwin (add-to-list 'default-frame-alist '(font . "Fira Code"))
+            (mac-auto-operator-composition-mode))
     (gnu/linux (add-to-list 'default-frame-alist '(font . "Source Code Variable")))
     (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro")))))
 
@@ -340,6 +341,7 @@
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
+  (setq evil-move-beyond-eol t)
   :config
   (evil-mode t))
 
@@ -518,7 +520,10 @@
 (use-package lispy
   :ensure t
   :hook
-  (emacs-lisp-mode . lispy-mode ))
+  (emacs-lisp-mode . lispy-mode )
+  :general
+  (:keymaps 'lispy-mode-map
+            "\"" 'lispy-doublequote))
 
 (use-package lispyville
   :ensure t
@@ -589,6 +594,23 @@
   :ensure t
   :config (ipretty-mode t))
 
+
+
+
+
+;; Haskell
+(use-package haskell-mode
+  :ensure t
+  :custom
+  (haskell-process-type 'stack-ghci)
+  (haskell-stylish-on-save t))
+
+(use-package dante
+  :ensure t
+  :after haskell-mode
+  :hook (haskell-mode . dante-mode)
+  :config
+  (add-to-list dante-methods-alist '(stack-ghci "stack ghci") t))
 
 
 

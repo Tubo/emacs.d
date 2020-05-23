@@ -1,5 +1,6 @@
 (use-package org
   :config
+  (require 'org-tempo)
   (add-hook 'org-mode-hook (lambda () (visual-line-mode 1)))
   (add-hook 'org-mode-hook (lambda () (org-variable-pitch-minor-mode 1)))
   (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
@@ -10,6 +11,7 @@
                                          ("#+END_SRC" . "†")
                                          ("#+begin_src" . "†")
                                          ("#+end_src" . "†")
+                                         ("#+RESULTS:" . ">")
                                          (">=" . "≥")
                                          ("=>" . "⟹")))
   (setq prettify-symbols-unprettify-at-point 'right-edge)
@@ -29,11 +31,17 @@
   (org-image-actual-width '(500))
   (org-edit-src-content-indentation 0)
   (org-src-tab-acts-natively t)
-  (org-clock-persist 'history)  
+  (org-clock-persist 'history)
   (org-agenda-todo-list-sublevels nil)
   (org-tags-column -80)
   (org-odd-levels-only nil)
   (org-ellipsis " ⤵")
+
+  ;; Babel
+  (org-confirm-babel-evaluate nil)
+  (org-src-fontify-natively t)
+  (org-src-tab-acts-natively t)
+
 
   :custom-face
   (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue" :family "Monaco"))))
@@ -67,9 +75,7 @@
   (evil-org-agenda-set-keys))
 
 (use-package anki-editor
-  ;; use development branch of anki-editor
-  ;; :quelpa (:fetcher github :repo "louietan/anki-editor" :branch "develop" :upgrade nil)
-  :ensure t
+  :quelpa (anki-editor :fetcher github :repo "tubo/anki-editor")
   :hook (org-mode . anki-editor-mode)
   :custom
   (anki-editor-create-decks t))
@@ -84,6 +90,7 @@
   :requires ox)
 
 (use-package org-brain
+  :disabled
   :ensure t
   :after org
   :init
