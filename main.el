@@ -7,7 +7,7 @@
 
 
 ;; Packages repositories
-;; ========
+
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "http://orgmode.org/elpa/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
@@ -20,22 +20,23 @@
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
-(eval-when-compile (require 'use-package))
+(eval-when-compile
+  (require 'use-package)
+  (require 'use-package-ensure)
+  (setq use-package-always-ensure t))
 
 (use-package quelpa
-  :ensure t
   :config
   :custom
   (quelpa-upgrade-interval 7)
   (quelpa-checkout-melpa-p nil)
   (quelpa-self-upgrade-p nil))
 
-(use-package quelpa-use-package
-  :ensure t)
+(use-package quelpa-use-package)
 
-(use-package general
-  :ensure t)
+(use-package general)
 
+(use-package restart-emacs)
 
 
 
@@ -128,7 +129,13 @@
     (darwin (add-to-list 'default-frame-alist '(font . "Fira Code"))
             (mac-auto-operator-composition-mode))
     (gnu/linux (add-to-list 'default-frame-alist '(font . "Source Code Variable")))
-    (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro")))))
+    (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro"))))
+
+  ;; Help-mode
+  (setq help-window-select 'other)
+
+  :general
+  ("C-x k" 'kill-this-buffer))
 
 
 
@@ -138,16 +145,14 @@
   ;; Disables menu-bar, tool-bar and scroll-bar
   ;; Changes backup dir
   ;; Misc changes
-  :ensure t)
+  )
 
 (use-package load-relative
   ;; Load ELisp file using relative location
-  :pin gnu
-  :ensure t)
+  :pin gnu)
 
 (use-package super-save
   ;; Autosave
-  :ensure t
   :config
   (setq auto-save-default nil)
   (setq super-save-remote-files nil)
@@ -162,7 +167,6 @@
 ;; ======
 (use-package exec-path-from-shell
   ;; Emacs exec paths should be same as shells
-  :ensure t
   :when (memq window-system '(mac ns x))
   :init
   (setq exec-path-from-shell-arguments nil)
@@ -185,17 +189,17 @@
     (setenv "EDITOR" "emacsclient"))
   :config
   (use-package esh-help
-    :ensure t
-    :config (setup-esh-help-eldoc)))
+    :config (setup-esh-help-eldoc))
+  :general
+  ("C-c s" 'eshell))
 
 
 
 
 
 ;; Version Control
-;; ==========
+
 (use-package magit
-  :ensure t
   :init
   (setq magit-no-confirm '(stage-all-changes))
   (setq magit-push-always-verify nil)
@@ -207,15 +211,9 @@
         'magit-default-tracking-name-branch-only) ;don't track with origin-*
   :general
   ("C-x g" 'magit-status
-   "<f1>" 'magit-status
    "C-x M-g" 'magit-dispatch))
 
-(use-package evil-magit
-  :ensure t
-  :after (magit evil))
-
 (use-package diff-hl
-  :ensure t
   :config
   (global-diff-hl-mode 1)
   (eval-after-load 'magit
@@ -230,33 +228,24 @@
 
 
 
-;; Window navigation
-;; ==========
+;; Window
+
 (use-package ace-window
-  :ensure t
   :config
   (setq aw-scope 'frame)
   :general
-  ("s-o" 'ace-window)
-  ("<f9>" 'ace-window))
+  ("C-x o" 'ace-window)
+  ("s-o" 'ace-window))
 
 (use-package eyebrowse
-  :ensure t
   :init
   (setq eyebrowse-new-workspace t)
-  (setq eyebrowse-wrap-around t)
   :config
   (eyebrowse-mode t)
   :general
   ("M-1" 'eyebrowse-switch-to-window-config-1)
   ("M-2" 'eyebrowse-switch-to-window-config-2)
-  ("M-3" 'eyebrowse-switch-to-window-config-3)
-  ("M-4" 'eyebrowse-switch-to-window-config-4)
-  ("M-5" 'eyebrowse-switch-to-window-config-5)
-  ("M-6" 'eyebrowse-switch-to-window-config-6)
-  ("M-7" 'eyebrowse-switch-to-window-config-7)
-  ("M-8" 'eyebrowse-switch-to-window-config-8)
-  ("M-9" 'eyebrowse-switch-to-window-config-9))
+  ("M-3" 'eyebrowse-switch-to-window-config-3))
 
 ;; multi-frame management independent of window systems
 (use-package frame
@@ -271,14 +260,22 @@
                      (abbreviate-file-name (buffer-file-name))
                    "%b")))))
 
+(use-package winner
+  :config
+  (winner-mode 1)
+  :general
+  (:prefix "C-c"
+           "w n" 'winner-redo
+           "w p" 'winner-undo))
+
+(use-package shackle)
 
 
 
 
 ;; File, buffer and pointer navigation
-;; ======================
+
 (use-package ivy
-  :ensure t
   :init
   (setq ivy-use-virtual-buffers t)
   (setq enable-recursive-minibuffers t)
@@ -289,78 +286,53 @@
    "C-c C-r" 'ivy-resume))
 
 (use-package counsel
-  :ensure t
   :config
   (counsel-mode t)
   :general
   ("M-x" 'counsel-M-x
-   "C-x C-f" 'counsel-find-file)
+   "C-x C-f" 'counsel-find-file
+   "C-S-s" 'counsel-ag)
   (minibuffer-local-map
    "C-r" 'counsel-minibuffer-history))
 
 (use-package swiper
-  :ensure t
   :general
   ("C-s" 'swiper))
 
 (use-package avy
   ;; Jump to things in Emacs tree-style
-  :ensure t)
+  :general
+  (:prefix "C-c"
+           "g" 'avy-goto-char-timer))
 
 
 
 
 
 ;; Project management
-;; ===============
+
 (use-package projectile
-  :ensure t
   :demand
   :init
   (setq projectile-switch-project-action 'projectile-dired)
-  (setq projectile-completion-system 'ido)
   (setq projectile-enable-caching t)
   (setq projectile-mode-line '(:eval (format " <%s>" (projectile-project-name))))
   :config
-  (projectile-global-mode)
   (setq projectile-completion-system 'ivy)
   :general
   ("C-c p" 'projectile-command-map))
 
 (use-package counsel-projectile
-  :ensure t)
-
-
-
-
-
-;; Evil
-;; ====
-(use-package evil
-  :ensure t
-  :init
-  (setq evil-want-integration t)
-  (setq evil-want-keybinding nil)
-  (setq evil-move-beyond-eol t)
   :config
-  (evil-mode t))
-
-(use-package evil-collection
-  :after (evil)
-  :ensure t
-  :config
-  (dolist (mode '(lispy))
-    (delq mode evil-collection-mode-list))
-  (evil-collection-init))
+  (counsel-projectile-mode))
 
 
 
 
 
 ;; Auto-completion
-;; ===============
+
 (use-package company
-  :ensure t
   :init
   (setq company-idle-delay 0.3
         company-tooltip-limit 20
@@ -392,13 +364,11 @@
 
   ;; Usage based completion sorting
   (use-package company-statistics
-    :ensure t
     :hook ((emacs-lisp-mode lisp-interaction-mode) . my-company-elisp-setup)
     :config (company-statistics-mode)))
 
 ;; Popup documentation for completion candidates
 (use-package company-quickhelp
-  :ensure t
   :init
   (setq company-quickhelp-use-propertized-text t)
   (setq company-quickhelp-delay 1)
@@ -410,10 +380,9 @@
 
 
 ;; File organisation
-;; =============
 (use-package dired
-  :ensure nil
   :demand
+  :ensure nil
   :init
   (setq dired-auto-revert-buffer t)
   (setq dired-listing-switches "-alh")
@@ -421,25 +390,20 @@
         '(byte-compile chgrp chmod chown copy delete load move symlink))
   (setq dired-deletion-confirmer (lambda (x) t)))
 
-(use-package dired-hacks-utils
-  :ensure t)
+(use-package dired-hacks-utils)
 
-(use-package dired-open
-  :ensure t)
+(use-package dired-open)
 
 (use-package dired-subtree
-  :ensure t
   :general
-  ('normal dired-mode-map "TAB" 'dired-subtree-cycle))
+  (:keymaps 'dired-mode-map "TAB" 'dired-subtree-cycle))
 
 (use-package dired-filter
-  :ensure t
   :general
-  ('normal dired-mode-map
-           "f" 'dired-filter-mode))
+  (:keymaps 'dired-mode-map
+            "f" 'dired-filter-mode))
 
 (use-package dired-rainbow
-  :ensure t
   :config
   (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
   (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
@@ -468,23 +432,25 @@
 
 
 ;; Snippets
-;; ===============
+
 (use-package yasnippet
-  :ensure t
   :init
   (setq yas-snippet-dirs `(,(expand-file-name "personal/snippets" user-emacs-directory))))
 
-(use-package auto-yasnippet
-  :ensure t)
+(use-package auto-yasnippet)
 
 
 
 
-;; General programming
-;; ===============
+;; General editing
+
+(use-package expand-region
+  :general
+  ("C-@" 'er/expand-region))
+
+
 (use-package aggressive-indent
   ;; Aggressively indent lines
-  :ensure
   :config
   (global-aggressive-indent-mode 1))
 
@@ -493,7 +459,6 @@
   :hook (prog-mode . display-line-numbers-mode))
 
 (use-package outshine
-  :ensure t
   :commands outshine-hook-function
   :hook ((outline-minor-mode . outshine-mode)
          (emacs-lisp-mode . outline-minor-mode))
@@ -501,86 +466,74 @@
   (setq outshine-imenu-show-headlines-p nil))
 
 (use-package highlight-thing
-  :ensure t
   :hook (prog-mode . highlight-thing-mode)
   :custom
   (highlight-thing-limit-to-defun t)
   (highlight-thing-exclude-thing-under-point t))
 
 (use-package format-all
-  :ensure t
   :hook (prog-mode . format-all-mode))
+
+(use-package hungry-delete
+  :config
+  (global-hungry-delete-mode))
+
+
+(use-package flycheck
+  :hook (emacs-lisp-mode . flycheck-mode))
 
 
 
 
 
 ;; Emacs Lisp
-;; ==========
+
 (use-package lispy
-  :ensure t
   :hook
   (emacs-lisp-mode . lispy-mode )
+  :config
+  (defun my/conditionally-enable-lispy ()
+    (when (eq this-command 'eval-expression)
+      (lispy-mode 1)))
+  (add-hook 'minibuffer-setup-hook 'my/conditionally-enable-lispy)
   :general
   (:keymaps 'lispy-mode-map
             "\"" 'lispy-doublequote))
 
-(use-package lispyville
-  :ensure t
-  :after lispy
-  :hook (lispy-mode . lispyville-mode)
-  :config
-  (lispyville-set-key-theme
-   '(operators c-w slurp/barf-lispy wrap prettify text-objects
-               commentary additional additional-insert)))
-
-(defun my/conditionally-enable-lispy ()
-  (when (eq this-command 'eval-expression)
-    (lispy-mode 1)))
-(add-hook 'minibuffer-setup-hook 'my/conditionally-enable-lispy)
-
-(use-package elisp-refs
-  :ensure t)
+(use-package elisp-refs)
 
 (use-package elisp-slime-nav
-  :ensure t
-  :hook ((emacs-lisp-mode ielm-mode) . turn-on-elisp-slime-nav-mode))
+  :hook ((emacs-lisp-mode ielm-mode) . elisp-slime-nav-mode))
 
 (use-package highlight-defined
-  :ensure t
   :hook (emacs-lisp-mode . highlight-defined-mode))
 
 (use-package rainbow-delimiters
-  :ensure t
   :hook (emacs-lisp-mode . rainbow-delimiters-mode))
 
 (use-package eldoc
-  :init
   :hook (emacs-lisp-mode . eldoc-mode)
   :hook (lisp-interaction-mode-hook . eldoc-mode))
 
 (use-package page-break-lines
-  ;; Display ^L page breaks as tidy horizontal lines
-  :ensure t
+  ;; Display ^L (C-q C-l) page breaks as tidy horizontal lines
   :config
   (global-page-break-lines-mode))
 
 (use-package eval-sexp-fu
-  :ensure t
-  :general
-  (:keymaps 'lisp-interaction-mode-map
-            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
-            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
-  (:keymaps 'emacs-lisp-mode-map
-            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
-            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
   :init
   (setq eval-sexp-fu-flash-duration 0.4)
   :config
-  (turn-on-eval-sexp-fu-flash-mode))
+  (turn-on-eval-sexp-fu-flash-mode)
+  :general
+  (:keymaps 'emacs-lisp-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
+  (:keymaps 'lisp-interaction-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp))
 
 (use-package eros
-  :ensure t
   :hook (emacs-lisp-mode . eros-mode )
   :hook (lisp-interaction-mode . eros-mode))
 
@@ -591,7 +544,6 @@
               (turn-on-eldoc-mode))))
 
 (use-package ipretty
-  :ensure t
   :config (ipretty-mode t))
 
 
@@ -599,14 +551,13 @@
 
 
 ;; Haskell
+
 (use-package haskell-mode
-  :ensure t
   :custom
   (haskell-process-type 'stack-ghci)
   (haskell-stylish-on-save t))
 
 (use-package dante
-  :ensure t
   :after haskell-mode
   :hook (haskell-mode . dante-mode)
   :config
@@ -616,10 +567,9 @@
 
 
 ;; Elm
-;; =====
+
 (use-package elm-mode
   :disabled
-  :ensure t
   :init
   (setq elm-tags-on-save t))
 
@@ -628,9 +578,8 @@
 
 
 ;; Json
-;; =====
+
 (use-package json-mode
-  :ensure t
   :mode "\\.json\\'")
 
 
@@ -638,12 +587,9 @@
 
 
 ;; Documents
-;; ===============
+
 (use-package pdf-tools
-  :ensure t
   :init
-  (with-eval-after-load 'evil
-    (evil-set-initial-state 'pdf-view-mode 'emacs))
   (pdf-loader-install)
   :config
   (setq pdf-view-use-scaling t)
@@ -657,7 +603,7 @@
 
 
 ;; Org-mode
-;; ==========
+
 (load-relative "config-org.el")
 
 
@@ -665,16 +611,14 @@
 
 
 ;; References
-;; ============
+
 (use-package helpful
-  :ensure t
   :general
   ("C-h f" 'helpful-callable
    "C-h k" 'helpful-key
    "C-h v" 'helpful-variable))
 
 (use-package which-key
-  :ensure t
   :custom
   (which-key-show-docstrings 'docstring-only)
   (which-key-max-description-length nil)
@@ -684,51 +628,29 @@
   (which-key-mode))
 
 (use-package discover-my-major
-  :ensure t
-  :init
-  (with-eval-after-load 'evil
-    (evil-set-initial-state 'makey-key-mode 'emacs))
-  :general ("C-h C-m" 'discover-my-major))
-
-
-
-
-
-;; Focus
-;; ===============
-(use-package darkroom
-  :ensure t
-  :general ("S-<f11>" 'darkroom-tentative-mode)
-  :custom
-  (darkroom-text-scale-increase 1.5)
-  (darkroom-margins-if-failed-guess 0.00))
-
-(use-package writeroom-mode
-  :ensure t
-  :general ("<f11>" 'writeroom-mode))
+  :general
+  ("C-h C-m" 'discover-my-major))
 
 
 
 
 
 ;; Load custom.el
-;; ==============
-(load custom-file)
+;; Don't load for now
+;; (load custom-file)
 
 
 
 
 
 ;; Theme
-;; =====
+
 (use-package zenburn-theme
-  :ensure t
   :config
   (setq zenburn-scale-org-headlines t)
   (load-theme 'zenburn t))
 
 (use-package smart-mode-line
-  :ensure t
   :init
   (setq rm-whitelist '(" LYVLE"))
   (setq sml/name-width 30)
@@ -740,8 +662,7 @@
   (rm-text-properties '(("LYVLE" 'display " 🍰"))))
 
 (use-package smart-mode-line-powerline-theme
-  :disabled
-  :ensure t)
+  :disabled)
 
 (use-package shr
   ;; increase contrast between similar colors
@@ -752,77 +673,11 @@
   :hook ((dired-mode package-menu-mode prog-mode) . hl-line-mode))
 
 (use-package rainbow-mode
-  :ensure t
   :hook (emacs-lisp-mode css-mode js-mode text-mode))
 
 (use-package all-the-icons)
 (use-package all-the-icons-ivy
-  :ensure t
   :init
   (all-the-icons-ivy-setup))
-
-
-
-
-
-;; Keybindings
-;; ===========
-
-;;; Custom keybindings
-(general-def
-  "C-x k" 'kill-this-buffer)
-
-(general-create-definer my-leader-def
-  :prefix "SPC")
-
-(my-leader-def
-  ;; Global Keybindings
-  :keymaps 'normal
-  "a" 'org-agenda
-  "b" 'ivy-switch-buffer
-  "c" 'org-capture
-  "d" 'counsel-dired
-  "e" 'counsel-find-file
-  "g" 'magit-status
-  "h w" 'aya-create
-  "h y" 'aya-expand
-  "k" 'kill-buffer-and-window
-  "p" 'counsel-projectile
-  "P" 'projectile-command-map
-  "r" 'ivy-resume
-  "s" 'swiper
-  "S" 'counsel-ag
-  "v" 'org-brain-visualize
-  "1" 'delete-other-windows
-  "2" 'ivy-switch-buffer-other-window
-  "3" 'switch-to-buffer-other-frame
-  "/" 'avy-goto-char-timer
-  "\\" 'eshell)
-
-(general-create-definer my-local-leader-def
-  ;; Local keybindings
-  :prefix "SPC SPC")
-
-(my-local-leader-def
-  ;; Org-mode
-  :states 'normal
-  :keymaps 'org-mode-map
-  "p" 'org-insert-link
-  "r" 'avy-org-refile-as-child
-  "R" 'org-refile
-  "c" 'anki-editor-cloze-dwim
-  "i" 'counsel-imenu
-  "t" 'counsel-org-tag
-  "h" 'yas-insert-snippet)
-
-(my-local-leader-def
-  ;; Emacs Lisp mode
-  :states '(normal visual)
-  :keymaps '(emacs-lisp-mode-map lisp-interaction-mode-map)
-  ","  #'lispyville-comment-or-uncomment
-  "."  #'lispyville-comment-and-clone-dwim
-  "ci" #'lispyville-comment-or-uncomment-line
-  "(" #'lispyville-wrap-round)
-
 
 
