@@ -36,6 +36,8 @@
 
 (use-package general)
 
+(use-package key-chord)
+
 (use-package restart-emacs)
 
 
@@ -73,7 +75,8 @@
    inhibit-default-init t
    mac-command-modifier 'meta
    mac-option-modifier 'super
-   mac-control-modifier 'control)
+   mac-control-modifier 'control
+   auto-revert-verbose nil)
   (setq-default
    tab-width 4
    indent-tabs-mode nil
@@ -94,9 +97,12 @@
 
   ;; mode-line time display
   (setq display-time-24hr-format t
+        display-time-day-and-date nil
         display-time-default-load-average nil
         display-time-use-mail-icon t)
   (display-time)
+
+  ;; Display buffer size
   (size-indication-mode)
 
   ;; encoding
@@ -126,16 +132,23 @@
 
   ;; fonts - depending on the OS
   (cl-case system-type
-    (darwin (add-to-list 'default-frame-alist '(font . "Fira Code"))
-            (mac-auto-operator-composition-mode))
-    (gnu/linux (add-to-list 'default-frame-alist '(font . "Source Code Variable")))
-    (windows-nt (add-to-list 'default-frame-alist '(font . "Source Code Pro"))))
+    (darwin
+     (set-frame-font "Fira Code" nil t)
+     (mac-auto-operator-composition-mode)
+     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
+    (gnu/linux
+     (set-frame-font "Source Code Variable")
+     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Noto Sans"))))))
+    (windows-nt
+     (set-frame-font "Source Code Pro")
+     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))))
 
   ;; Help-mode
   (setq help-window-select 'other)
 
   :general
-  ("C-x k" 'kill-this-buffer))
+  ("C-x k" 'kill-this-buffer
+   "C-/" 'undo-only))
 
 
 
@@ -154,17 +167,19 @@
 (use-package super-save
   ;; Autosave
   :config
-  (setq auto-save-default nil)
-  (setq super-save-remote-files nil)
-  (setq super-save-auto-save-when-idle t)
-  (super-save-mode +1))
+  (super-save-mode +1)
+  :custom
+  (auto-save-default nil)
+  (super-save-remote-files nil)
+  (super-save-auto-save-when-idle t)
+  (super-save-idle-duration 30))
 
 
 
 
 
 ;; Shell
-;; ======
+
 (use-package exec-path-from-shell
   ;; Emacs exec paths should be same as shells
   :when (memq window-system '(mac ns x))
@@ -231,8 +246,9 @@
 ;; Window
 
 (use-package ace-window
-  :config
-  (setq aw-scope 'frame)
+  :custom
+  (aw-scope 'frame)
+  (aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
   :general
   ("C-x o" 'ace-window)
   ("s-o" 'ace-window))
@@ -302,8 +318,8 @@
 (use-package avy
   ;; Jump to things in Emacs tree-style
   :general
-  (:prefix "C-c"
-           "g" 'avy-goto-char-timer))
+  ("C-c g" 'avy-goto-char-timer
+   "C-." 'avy-goto-char-in-line))
 
 
 
@@ -387,8 +403,10 @@
   (setq dired-auto-revert-buffer t)
   (setq dired-listing-switches "-alh")
   (setq dired-no-confirm
-        '(byte-compile chgrp chmod chown copy delete load move symlink))
-  (setq dired-deletion-confirmer (lambda (x) t)))
+        '(byte-compile chgrp chmod chown copy load move symlink))
+  (setq dired-deletion-confirmer (lambda (x) t))
+  :custom
+  (dired-dwim-target t))
 
 (use-package dired-hacks-utils)
 
@@ -403,30 +421,8 @@
   (:keymaps 'dired-mode-map
             "f" 'dired-filter-mode))
 
-(use-package dired-rainbow
-  :config
-  (dired-rainbow-define-chmod directory "#6cb2eb" "d.*")
-  (dired-rainbow-define html "#eb5286" ("css" "less" "sass" "scss" "htm" "html" "jhtm" "mht" "eml" "mustache" "xhtml"))
-  (dired-rainbow-define xml "#f2d024" ("xml" "xsd" "xsl" "xslt" "wsdl" "bib" "json" "msg" "pgn" "rss" "yaml" "yml" "rdata"))
-  (dired-rainbow-define document "#9561e2" ("docm" "doc" "docx" "odb" "odt" "pdb" "pdf" "ps" "rtf" "djvu" "epub" "odp" "ppt" "pptx"))
-  (dired-rainbow-define markdown "#ffed4a" ("org" "etx" "info" "markdown" "md" "mkd" "nfo" "pod" "rst" "tex" "textfile" "txt"))
-  (dired-rainbow-define database "#6574cd" ("xlsx" "xls" "csv" "accdb" "db" "mdb" "sqlite" "nc"))
-  (dired-rainbow-define media "#de751f" ("mp3" "mp4" "MP3" "MP4" "avi" "mpeg" "mpg" "flv" "ogg" "mov" "mid" "midi" "wav" "aiff" "flac"))
-  (dired-rainbow-define image "#f66d9b" ("tiff" "tif" "cdr" "gif" "ico" "jpeg" "jpg" "png" "psd" "eps" "svg"))
-  (dired-rainbow-define log "#c17d11" ("log"))
-  (dired-rainbow-define shell "#f6993f" ("awk" "bash" "bat" "sed" "sh" "zsh" "vim"))
-  (dired-rainbow-define interpreted "#38c172" ("py" "ipynb" "rb" "pl" "t" "msql" "mysql" "pgsql" "sql" "r" "clj" "cljs" "scala" "js"))
-  (dired-rainbow-define compiled "#4dc0b5" ("asm" "cl" "lisp" "el" "c" "h" "c++" "h++" "hpp" "hxx" "m" "cc" "cs" "cp" "cpp" "go" "f" "for" "ftn" "f90" "f95" "f03" "f08" "s" "rs" "hi" "hs" "pyc" ".java"))
-  (dired-rainbow-define executable "#8cc4ff" ("exe" "msi"))
-  (dired-rainbow-define compressed "#51d88a" ("7z" "zip" "bz2" "tgz" "txz" "gz" "xz" "z" "Z" "jar" "war" "ear" "rar" "sar" "xpi" "apk" "xz" "tar"))
-  (dired-rainbow-define packaged "#faad63" ("deb" "rpm" "apk" "jad" "jar" "cab" "pak" "pk3" "vdf" "vpk" "bsp"))
-  (dired-rainbow-define encrypted "#ffed4a" ("gpg" "pgp" "asc" "bfe" "enc" "signature" "sig" "p12" "pem"))
-  (dired-rainbow-define fonts "#6cb2eb" ("afm" "fon" "fnt" "pfb" "pfm" "ttf" "otf"))
-  (dired-rainbow-define partition "#e3342f" ("dmg" "iso" "bin" "nrg" "qcow" "toast" "vcd" "vmdk" "bak"))
-  (dired-rainbow-define vc "#0074d9" ("git" "gitignore" "gitattributes" "gitmodules"))
-  (dired-rainbow-define-chmod executable-unix "#38c172" "-.*x.*"))
-
-
+(use-package diredfl
+  :hook (dired-mode . diredfl-global-mode))
 
 
 
@@ -446,8 +442,8 @@
 
 (use-package expand-region
   :general
-  ("C-@" 'er/expand-region))
-
+  ("C-@" 'er/expand-region
+   "C-;" 'er/expand-region))
 
 (use-package aggressive-indent
   ;; Aggressively indent lines
@@ -477,7 +473,6 @@
 (use-package hungry-delete
   :config
   (global-hungry-delete-mode))
-
 
 (use-package flycheck
   :hook (emacs-lisp-mode . flycheck-mode))
@@ -637,7 +632,7 @@
 
 ;; Load custom.el
 ;; Don't load for now
-;; (load custom-file)
+(load custom-file)
 
 
 
@@ -647,22 +642,53 @@
 
 (use-package zenburn-theme
   :config
-  (setq zenburn-scale-org-headlines t)
-  (load-theme 'zenburn t))
+  (load-theme 'zenburn t)
+  :custom-face
+  (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
+  (org-document-title ((t (:height 2.0 :weight normal :foreground "#8CD0D3" :family "Optima"))))
+  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
+  (org-meta-line ((t (:height 0.8 :inherit shadow))))
+  (org-special-keyword ((t (:height 0.8))))
+  (org-ellipsis ((t (:underline nil :height 0.5))))
+  (org-level-1 ((t (:height 1.2 :weight medium :inherit outline-1))))
+  (org-level-2 ((t (:height 1.1 :inherit outline-2))))
+  (org-level-3 ((t (:height 1.1 :inherit outline-3))))
+  (org-level-4 ((t (:height 1.0 :inherit outline-4))))
+  (org-level-5 ((t (:height 1.0 :inherit outline-5))))
+  (org-level-6 ((t (:height 1.0 :inherit outline-6))))
+  (org-level-7 ((t (:height 1.0 :inherit outline-7))))
+  (org-level-8 ((t (:height 1.0 :inherit outline-8))))
+  (org-checkbox-statistics-todo ((t (:height 0.8 :inherit (org-todo)))))
+  (org-checkbox-statistics-done ((t (:height 0.8 :inherit (org-done)))))
+  (org-tag ((t (:height 0.7))))
+  (org-table ((t (:foreground "#9FC59F" :height 0.8))))
+  (org-done ((t (:foreground "LightGreen")))))
 
 (use-package smart-mode-line
-  :init
-  (setq rm-whitelist '(" LYVLE"))
-  (setq sml/name-width 30)
-  (setq sml/vc-mode-show-backend t)
-  (setq sml/no-confirm-load-theme t)
   :config
   (sml/setup)
   :custom
-  (rm-text-properties '(("LYVLE" 'display " 🍰"))))
+  (sml/theme 'dark)
+  (sml/name-width 30)
+  (sml/mode-width '20)
+  (sml/shorten-modes t)
+  (sml/vc-mode-show-backend t)
+  (sml/no-confirm-load-theme t)
+  (rm-whitelist '())
+  (rm-blacklist '(" ElDoc" " super-save" " ivy" " counsel" " company" " PgLn" " BufFace" " anki-editor"
+                  " Outl" " WK" " FmtAll" " hlt" " Rbow" " SliNav" " h" " =>" " Hi" " OVP" " Ind" " yas"))
+  (sml/extra-filler 0)
+  (rm-text-properties '(("Outshine" 'display " 🌻")
+                        ("Org-roam" 'display " 🏄🏼‍♂️"))))
 
-(use-package smart-mode-line-powerline-theme
-  :disabled)
+(use-package nyan-mode
+  :disabled
+  :config
+  (nyan-mode 1)
+  :custom
+  (nyan-animate-nyancat nil)
+  (nyan-wavy-trail nil)
+  (nyan-minimum-window-width 125))
 
 (use-package shr
   ;; increase contrast between similar colors
@@ -679,5 +705,3 @@
 (use-package all-the-icons-ivy
   :init
   (all-the-icons-ivy-setup))
-
-

@@ -1,21 +1,20 @@
 (use-package org
   :pin org
   :ensure org-plus-contrib
-  ;; :requires 'org-tempo
+  :hook ((org-mode . (lambda () (visual-line-mode 1)))
+         (org-mode . (lambda () (abbrev-mode 1)))
+         (org-mode . (lambda () (yas-minor-mode 1)))
+         (org-mode . prettify-symbols-mode))
   :config
-  (add-hook 'org-mode-hook (lambda () (visual-line-mode 1)))
-  (add-hook 'org-mode-hook (lambda () (org-variable-pitch-minor-mode 1)))
-  (add-hook 'org-mode-hook (lambda () (abbrev-mode 1)))
+  (require 'org-tempo)
   (yas-reload-all)
-  (add-hook 'org-mode-hook (lambda () (yas-minor-mode 1)))
-  (org-clock-persistence-insinuate)
   (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "†")
                                          ("#+END_SRC" . "†")
                                          ("#+begin_src" . "†")
                                          ("#+end_src" . "†")
                                          ("#+RESULTS:" . ">")))
   (setq prettify-symbols-unprettify-at-point 'right-edge)
-  (add-hook 'org-mode-hook 'prettify-symbols-mode)
+  (org-clock-persistence-insinuate)
 
   :custom
   (org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
@@ -36,89 +35,120 @@
   (org-tags-column -80)
   (org-odd-levels-only nil)
   (org-ellipsis " ⤵")
+  (org-hide-leading-stars t)
 
   ;; Babel
   (org-confirm-babel-evaluate nil)
   (org-src-fontify-natively t)
   (org-src-tab-acts-natively t)
 
-
-  :custom-face
-  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue" :family "Monaco"))))
-  (org-special-keyword ((t (:height 0.8))))
-  (org-tag ((t (:height 0.7))))
-  (org-done ((t (:foreground "LightGreen"))))
-  (org-ellipsis ((t (:underline nil :height 0.5))))
-
   :general
   ("C-c l" 'org-store-link
-   "C-c c" 'org-capture))
+   "C-c c" 'org-capture)
+  (:keymaps 'org-mode-map
+            "C-;" 'mark-word))
 
 
 
 
 
+(use-package org-roam
+  :config
+  (org-roam-mode)
+  :custom
+  (org-roam-buffer "*Notes Collection*")
+  (org-roam-buffer-position 'bottom)
+  (org-roam-completion-system 'ivy)
+  (org-roam-directory "~/Dropbox/org/notes/")
+  (org-roam-tag-sources '(prop all-directories))
+  (org-roam-capture-templates '(("d" "default" plain (function org-roam--capture-get-point)
+                                 "%?"
+                                 :file-name "%<%Y%m%d%H%M%S>-${slug}"
+                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :unnarrowed t)
+                                ("r" "reference" plain (function org-roam--capture-get-point)
+                                 "%?"
+                                 :file-name "refs/%<%Y%m%d%H%M%S>-${slug}"
+                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :unnarrowed t)
+                                ("m" "medicine" plain (function org-roam--capture-get-point)
+                                 "%?"
+                                 :file-name "medicine/${slug}"
+                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :unnarrowed t)))
+  :general
+  ("C-c f" 'org-roam-find-file)
+  ("C-c r" 'org-roam)
+  ("C-c i" 'org-roam-insert))
+
+(use-package org-journal
+  :bind
+  ("C-c n j" . org-journal-new-entry)
+  :custom
+  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-file-format "%Y-%m-%d.org")
+  (org-journal-dir org-roam-directory)
+  (org-journal-date-format "%A, %d %B %Y"))
+
+
 (use-package worf
   :hook (org-mode . worf-mode))
 
-
 (use-package org-variable-pitch
-  :hook (org-mode . org-variable-pitch-minor-mode))
+  :hook (org-mode . org-variable-pitch-minor-mode)
+  :custom
+  ;; This sets the monospace font used in org-mode
+  (org-variable-pitch-fixed-font "Hack Nerd Font")
+  ;; Use monospace for stars
+  (org-variable-pitch-fontify-headline-prefix nil)
+  (org-variable-pitch-fixed-faces '(org-drawer
+                                    org-block
+                                    org-block-begin-line
+                                    org-block-end-line
+                                    org-code
+                                    org-document-info-keyword
+                                    org-done
+                                    org-formula
+                                    org-indent
+                                    org-meta-line
+                                    org-special-keyword
+                                    org-table
+                                    org-todo
+                                    org-verbatim
+                                    org-date)))
 
+(use-package org-superstar
+  ;; Modern replacement for org-bullets
+  :hook (org-mode . (lambda () (org-superstar-mode 1)))
+  :custom
+  (org-superstar-headline-bullets-list '("•"))
+  (org-superstar-prettify-item-bullets nil))
+
+(use-package org-fc
+  :disabled
+  :quelpa (org-fc :fetcher github :repo "l3kn/org-fc")
+  :config
+  (require 'org-fc-hydra)
+  :custom
+  (org-fc-directories `(,org-roam-directory)))
 
 (use-package anki-editor
   ;; :quelpa (anki-editor :fetcher github :repo "tubo/anki-editor")
   ;; :quelpa (anki-editor :fetcher file :path "~/Projects/anki-editor")
   :after org
   :load-path "~/Projects/anki-editor/"
-  :hook (org-mode . anki-editor-mode)
+  :hook
+  (org-mode . anki-editor-mode)
+  (org-mode . hi-lock-mode)
   :custom
   (anki-editor-create-decks t)
   :config
-  (defun formatted-copy ()
-    "Export region to HTML, and copy it to the clipboard."
-    (interactive)
-    (save-window-excursion
-      (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil t t t '(:H 1)))
-             (html (with-current-buffer buf (buffer-string))))
-        (with-current-buffer buf
-          (shell-command-on-region
-           (point-min)
-           (point-max)
-           "textutil -stdin -format html -convert rtf -stdout | pbcopy"))
-        (kill-buffer buf))))
-
-  (defun anki-editor-cloze-region-auto-incr (&optional arg)
-    "Cloze region without hint and increase card number."
-    (interactive)
-    (anki-editor-cloze-region my-anki-editor-cloze-number "")
-    (setq my-anki-editor-cloze-number (1+ my-anki-editor-cloze-number))
-    (forward-sexp))
-
-  (defun anki-editor-cloze-region-dont-incr (&optional arg)
-    "Cloze region without hint using the previous card number."
-    (interactive)
-    (anki-editor-cloze-region (1- my-anki-editor-cloze-number) "")
-    (forward-sexp))
-
-  (defun anki-editor-reset-cloze-number (&optional arg)
-    "Reset cloze number to ARG or 1"
-    (interactive)
-    (setq my-anki-editor-cloze-number (or arg 1)))
-
-  (defun anki-editor-push-tree ()
-    "Push all notes under a tree."
-    (interactive)
-    (anki-editor-push-notes '(4))
-    (anki-editor-reset-cloze-number))
-
-  (anki-editor-reset-cloze-number)
-
+  (load-relative "./packages/utils.el")
   :general
   (:keymaps 'org-mode-map
-            "<f5>" 'anki-editor-cloze-region-auto-incr
-            "<f6>" 'anki-editor-cloze-region-dont-incr
-            "<f7>" 'anki-editor-reset-cloze-number))
+            "<f5>" 'my/org-add-cloze
+            "<f6>" 'my/formatted-copy
+            "C-," 'anki-editor-cloze-region-auto-incr))
 
 (use-package org-pomodoro
   :disabled)
@@ -131,12 +161,6 @@
   :disabled
   :config
   (add-hook 'org-noter-insert-heading-hook #'org-id-get-create))
-
-(use-package org-bullets
-  :disabled
-  :hook (org-mode . org-bullets-mode)
-  :custom
-  (org-bullets-bullet-list '("✸" "◆" "◉" "○" "▶")))
 
 (use-package org-download
   :demand
@@ -169,34 +193,3 @@
 (use-package ox-cv
   :load-path "~/.emacs.d/personal/packages/"
   :after ox)
-
-
-
-
-
-;; OS-specific settings
-;; ====================
-(use-package org
-  ;; MacOS settings
-  :if (eq system-type 'darwin)
-  :config
-  :custom
-  (org-variable-pitch-fixed-font "Andale Mono")
-  :custom-face
-  (variable-pitch ((t (:height 1.2 :family "Avenir Next")))))
-
-(use-package org
-  ;; Linux settings
-  :if (eq system-type 'gnu/linux)
-  :custom
-  (org-variable-pitch-fixed-font "Sourse Code Variable")
-  :custom-face
-  (variable-pitch ((t (:height 1.2 :family "Noto Sans")))))
-
-(use-package org
-  ;; Windows settings
-  :if (eq system-type 'windows-nt)
-  :custom
-  (org-variable-pitch-fixed-font "Sourse Code Variable")
-  :custom-face
-  (variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))
