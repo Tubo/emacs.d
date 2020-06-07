@@ -43,7 +43,8 @@
   (org-src-tab-acts-natively t)
 
   :general
-  ("C-c l" 'org-store-link
+  ("C-c a" 'org-agenda
+   "C-c l" 'org-store-link
    "C-c c" 'org-capture)
   (:keymaps 'org-mode-map
             "C-;" 'mark-word))
@@ -85,6 +86,8 @@
   :bind
   ("C-c n j" . org-journal-new-entry)
   :custom
+  (org-journal-carryover-delete-empty-journal 'always)
+  (org-journal-enable-agenda-integration t)
   (org-journal-date-prefix "#+TITLE: ")
   (org-journal-file-format "%Y-%m-%d.org")
   (org-journal-dir org-roam-directory)
@@ -143,12 +146,13 @@
   :custom
   (anki-editor-create-decks t)
   :config
-  (load-relative "./packages/utils.el")
+  (load-file "~/.emacs.d/personal/packages/utils.el")
   :general
   (:keymaps 'org-mode-map
             "<f5>" 'my/org-add-cloze
             "<f6>" 'my/formatted-copy
-            "C-," 'anki-editor-cloze-region-auto-incr))
+            "C-," 'my/anki-cloze-dwim
+            "C-c ," 'my/anki-del-cloze-region-or-subtree))
 
 (use-package org-pomodoro
   :disabled)

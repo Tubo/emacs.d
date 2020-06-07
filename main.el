@@ -133,7 +133,7 @@
   ;; fonts - depending on the OS
   (cl-case system-type
     (darwin
-     (set-frame-font "Fira Code" nil t)
+     (set-frame-font "Hack Nerd Font" nil t)
      (mac-auto-operator-composition-mode)
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
     (gnu/linux
@@ -644,6 +644,8 @@
   :config
   (load-theme 'zenburn t)
   :custom-face
+  (mode-line-buffer-id ((t (:height 1.0 :family "Optima"))))
+  (default ((t (:family "Fira Code"))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
   (org-document-title ((t (:height 2.0 :weight normal :foreground "#8CD0D3" :family "Optima"))))
   (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
@@ -658,6 +660,7 @@
   (org-level-6 ((t (:height 1.0 :inherit outline-6))))
   (org-level-7 ((t (:height 1.0 :inherit outline-7))))
   (org-level-8 ((t (:height 1.0 :inherit outline-8))))
+  (org-block ((t (:height 0.8))))
   (org-checkbox-statistics-todo ((t (:height 0.8 :inherit (org-todo)))))
   (org-checkbox-statistics-done ((t (:height 0.8 :inherit (org-done)))))
   (org-tag ((t (:height 0.7))))
@@ -669,8 +672,8 @@
   (sml/setup)
   :custom
   (sml/theme 'dark)
-  (sml/name-width 30)
-  (sml/mode-width '20)
+  (sml/name-width 40)
+  (sml/mode-width 20)
   (sml/shorten-modes t)
   (sml/vc-mode-show-backend t)
   (sml/no-confirm-load-theme t)

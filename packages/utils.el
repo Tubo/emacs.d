@@ -55,40 +55,97 @@
   "Export region to HTML, and copy it to the clipboard."
   (interactive)
   (save-window-excursion
-    (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil t t t '(:H 1)))
-           (html (with-current-buffer buf (buffer-string))))
-      (with-current-buffer buf
-        (shell-command-on-region
-         (point-min)
-         (point-max)
-         "textutil -stdin -format html -convert rtf -stdout | pbcopy"))
-      (kill-buffer buf))))
+    (save-restriction
+      (unless (use-region-p)
+        (org-back-to-heading)
+        (org-narrow-to-subtree))
+      (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t '(:H 0)))
+             (html (with-current-buffer buf (buffer-string))))
+        (with-current-buffer buf
+          (shell-command-on-region
+           (point-min)
+           (point-max)
+           "textutil -stdin -format html -convert rtf -stdout | pbcopy"
+           ;; "pandoc -f html -t rtf | pbcopy -Prefer rtf"
+           ))
+        (kill-buffer buf))))
+  (message "Content copied as html."))
 
 
 ;;; Add cloze for text
 
 (defun my/find-largest-cloze ()
+  "Find the largest number of cloze in a subtree."
   (save-excursion
-    (let (current
-          (largest 0))
-      (org-back-to-heading)
-      (while (re-search-forward "{{c" nil t)
-        (setq current (thing-at-point 'number))
-        (if (> current largest)
-            (setq largest current)))
-      largest)))
+    (save-restriction
+      (let (current
+            (largest 0))
+        (org-back-to-heading)
+        (org-narrow-to-subtree)
+        (while (re-search-forward "{{c" nil t)
+          (setq current (thing-at-point 'number))
+          (if (> current largest)
+              (setq largest current)))
+        largest))))
 
-(defun anki-editor-cloze-region-auto-incr (arg)
-  "Cloze region without hint and increase card number."
+
+(defun my/anki-cloze (begin end arg)
+  "Cloze region from BEGIN to END with number ARG."
+  (let ((region (buffer-substring begin end)))
+    (save-excursion
+      (delete-region begin end)
+      (insert (with-output-to-string
+                (princ (format "{{c%d::%s" (or arg 1) region))
+                (princ "}}"))))))
+
+(defun my/anki-cloze-dwim (arg)
+  "Cloze region without hint and set cloze number by ARG."
   (interactive "p")
   (let ((largest (my/find-largest-cloze)))
-    (unless (region-active-p)
-      (unless (cl-search (string (preceding-char)) " (") (backward-word))
+    (unless (use-region-p)
+      (unless (cl-search (string (preceding-char)) " ({[")
+        (backward-word))
       (mark-word))
     (cond ((= arg 1)
-           (anki-editor-cloze-region (1+ largest) ""))
+           (my/anki-cloze (region-beginning) (region-end) (1+ largest)))
           ((> arg 1)
-           (anki-editor-cloze-region arg ""))
+           (my/anki-cloze (region-beginning) (region-end) arg))
           ((= arg -1)
-           (anki-editor-cloze-region largest ""))))
-  (forward-sexp))
+           (my/anki-cloze (region-beginning) (region-end) largest))))
+  (forward-sexp)
+  (forward-to-word 1))
+
+(defun my/anki-del-cloze-at-point ()
+  (interactive)
+  (when (string= (string (following-char)) "{")
+    (forward-char 2))
+  (search-backward "{{")
+  (zap-to-char 2 (string-to-char ":"))
+  (search-forward "}}")
+  (delete-backward-char 2))
+
+(defun my/anki-del-cloze-region-or-subtree ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (if (use-region-p)
+          (narrow-to-region (region-beginning) (region-end))
+        (org-narrow-to-subtree))
+      (goto-char (point-min))
+      (while (search-forward-regexp "{{c.*?}}" nil t)
+        (my/anki-del-cloze-at-point)))))
+
+(defun my/anki-reorder-cloze-number ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (org-back-to-heading)
+      (org-narrow-to-subtree)
+      (let (point cur (prev 0) (count 0))
+        (while (re-search-forward "{{c\\([0-9]*\\)" nil t)
+          (setq cur (string-to-number (match-string 1)))
+          (replace-match (number-to-string
+                          (if (= prev cur)
+                              count
+                            (setq count (1+ count)))) nil nil nil 1)
+          (setq prev cur))))))
