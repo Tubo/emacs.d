@@ -103,7 +103,7 @@
   (interactive "p")
   (let ((largest (my/find-largest-cloze)))
     (unless (use-region-p)
-      (unless (cl-search (string (preceding-char)) " ({[")
+      (unless (cl-search (string (preceding-char)) "\n ({[")
         (backward-word))
       (mark-word))
     (cond ((= arg 1)

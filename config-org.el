@@ -44,8 +44,7 @@
 
   :general
   ("C-c a" 'org-agenda
-   "C-c l" 'org-store-link
-   "C-c c" 'org-capture)
+   "C-c l" 'org-store-link)
   (:keymaps 'org-mode-map
             "C-;" 'mark-word))
 
@@ -61,36 +60,45 @@
   (org-roam-buffer-position 'bottom)
   (org-roam-completion-system 'ivy)
   (org-roam-directory "~/Dropbox/org/notes/")
-  (org-roam-tag-sources '(prop all-directories))
+  (org-roam-tag-sources '(prop last-directory))
   (org-roam-capture-templates '(("d" "default" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "%<%Y%m%d%H%M%S>-${slug}"
-                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :file-name "%<%y%m%d%h%m%s>-${slug}"
+                                 :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n\n"
                                  :unnarrowed t)
                                 ("r" "reference" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "refs/%<%Y%m%d%H%M%S>-${slug}"
-                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :file-name "refs/%<%y%m%d%h%m%s>-${slug}"
+                                 :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n#+roam_key:\n\n"
                                  :unnarrowed t)
-                                ("m" "medicine" plain (function org-roam--capture-get-point)
+                                ("x" "dx / ddx" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "medicine/${slug}"
-                                 :head "#+TITLE: ${title}\n#+ROAM_ALIAS:\n#+ROAM_TAGS:\n\n"
+                                 :file-name "dx/${slug}"
+                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
+                                 :immediate-finish
+                                 :unnarrowed t)
+                                ("s" "signs" plain (function org-roam--capture-get-point)
+                                 "%?"
+                                 :file-name "signs/${slug}"
+                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
+                                 :immediate-finish
                                  :unnarrowed t)))
   :general
-  ("C-c f" 'org-roam-find-file)
-  ("C-c r" 'org-roam)
-  ("C-c i" 'org-roam-insert))
+  ("C-c f" 'org-roam-find-file
+   "C-c i" 'org-roam-insert)
+  ("C-c n f" 'org-roam-find-file)
+  ("C-c n r" 'org-roam)
+  ("C-c n i" 'org-roam-insert))
 
 (use-package org-journal
   :bind
   ("C-c n j" . org-journal-new-entry)
   :custom
   (org-journal-carryover-delete-empty-journal 'always)
-  (org-journal-enable-agenda-integration t)
-  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-enable-agenda-integration nil)
+  (org-journal-date-prefix "#+title: ")
   (org-journal-file-format "%Y-%m-%d.org")
-  (org-journal-dir org-roam-directory)
+  (org-journal-dir (concat org-roam-directory "dailies/"))
   (org-journal-date-format "%A, %d %B %Y"))
 
 
@@ -153,6 +161,25 @@
             "<f6>" 'my/formatted-copy
             "C-," 'my/anki-cloze-dwim
             "C-c ," 'my/anki-del-cloze-region-or-subtree))
+
+(use-package org-ref
+  :config
+  (defun my/org-ref-open-pdf-at-point ()
+    "Open the pdf for bibtex key under point if it exists."
+    (interactive)
+    (let* ((results (org-ref-get-bibtex-key-and-file))
+           (key (car results))
+           (pdf-file (car (bibtex-completion-find-pdf key))))
+      (if (file-exists-p pdf-file)
+          (org-open-file pdf-file)
+        (message "No PDF found for %s" key))))
+  :custom
+  (reftex-default-bibliography '("~/Dropbox/org/bib/My Library.bib"))
+  (org-ref-default-bibliography '("~/Dropbox/org/bib/My Library.bib"))
+  (bibtex-completion-pdf-field "File")
+  (bibtex-completion-bibliography org-ref-default-bibliography)
+  (org-ref-open-pdf-function 'my/org-ref-open-pdf-at-point)
+  (org-ref-completion-library 'org-ref-ivy-cite))
 
 (use-package org-pomodoro
   :disabled)
