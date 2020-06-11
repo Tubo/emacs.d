@@ -11,7 +11,7 @@
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "http://orgmode.org/elpa/")
                          ("gnu" . "https://elpa.gnu.org/packages/")))
-(add-to-list 'load-path "~/.emacs.d/personal/packages/")
+(add-to-list 'load-path "~/.emacs.d/config/packages/")
 (package-initialize)
 
 
@@ -68,7 +68,7 @@
    load-prefer-newer 5
    eval-expression-print-length nil
    eval-expression-print-level nil
-   custom-file (expand-file-name "personal/custom.el" user-emacs-directory)
+   custom-file (expand-file-name "config/custom.el" user-emacs-directory)
    abbrev-file-name (expand-file-name "personal/abbrev_defs" user-emacs-directory)
    inhibit-splash-screen t
    inhibit-startup-message t
@@ -431,7 +431,7 @@
 
 (use-package yasnippet
   :init
-  (setq yas-snippet-dirs `(,(expand-file-name "personal/snippets" user-emacs-directory))))
+  (setq yas-snippet-dirs `(,(expand-file-name "config/snippets" user-emacs-directory))))
 
 (use-package auto-yasnippet)
 

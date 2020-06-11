@@ -165,7 +165,7 @@
   :custom
   (anki-editor-create-decks t)
   :config
-  (load-file "~/.emacs.d/personal/packages/utils.el")
+  (load-file "~/.emacs.d/config/packages/utils.el")
   :general
   (:keymaps 'org-mode-map
             "<f5>" 'my/org-add-cloze
@@ -233,5 +233,5 @@
   :after ox)
 
 (use-package ox-cv
-  :load-path "~/.emacs.d/personal/packages/"
+  :load-path "~/.emacs.d/config/packages/"
   :after ox)
