@@ -70,6 +70,13 @@
                                  "%?"
                                  :file-name "refs/%<%y%m%d%h%m%s>-${slug}"
                                  :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n#+roam_key:\n\n"
+                                 :immediate-finish
+                                 :unnarrowed t)
+                                ("m" "medical" plain (function org-roam--capture-get-point)
+                                 "%?"
+                                 :file-name "med/%<%y%m%d%h%m%s>-${slug}"
+                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
+                                 :immediate-finish
                                  :unnarrowed t)
                                 ("x" "dx / ddx" plain (function org-roam--capture-get-point)
                                  "%?"
@@ -83,6 +90,10 @@
                                  :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)))
+  :custom-face
+  (org-roam-link ((t (:family "Optima" :foreground "LightSkyBlue" :underline t))))
+  (org-roam-link-current ((t (:family "Optima" :foreground "DarkBlue" :underline t))))
+  (org-roam-link-current ((t (:family "Optima" :foreground "DarkRed" :underline t))))
   :general
   ("C-c f" 'org-roam-find-file
    "C-c i" 'org-roam-insert)

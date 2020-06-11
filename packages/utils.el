@@ -58,7 +58,8 @@
     (save-restriction
       (unless (use-region-p)
         (org-back-to-heading)
-        (org-narrow-to-subtree))
+        (org-narrow-to-subtree)
+        (my/anki-reorder-cloze-number))
       (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t '(:H 0)))
              (html (with-current-buffer buf (buffer-string))))
         (with-current-buffer buf
