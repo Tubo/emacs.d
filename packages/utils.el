@@ -37,7 +37,23 @@
           (kill-buffer buf)
           (if id
               (my/anki-update-cloze (string-to-number id) html context)
-            (setq id (my/anki-add-cloze "Tubo's Anatomy::Upper limb" html context))
+            (setq id (my/anki-add-cloze deck html context))
+            (org-set-property "ANKI_CARD_ID" (number-to-string id))))))))
+
+(defun my/org-add-cloze-with-extra ()
+  "Personal useful function."
+  (interactive)
+  (let ((context (read-string "Context: " (car minibuffer-history) '(minibuffer-history . 0))))
+    (save-window-excursion
+      (save-restriction
+        (org-narrow-to-subtree)
+        (let* ((deck (org-entry-get-with-inheritance "ANKI_DECK"))
+               (id (org-entry-get (point) "ANKI_CARD_ID"))
+               (text (org-export-string-as (org-get-heading t t t t) 'html t))
+               (extra (org-export-string-as (org-get-entry) 'html t)))
+          (if id
+              (my/anki-update-cloze (string-to-number id) text context extra)
+            (setq id (my/anki-add-cloze deck text context extra))
             (org-set-property "ANKI_CARD_ID" (number-to-string id))))))))
 
 
