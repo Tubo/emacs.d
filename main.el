@@ -147,12 +147,14 @@
   (setq help-window-select 'other)
 
   :general
-  ("C-x k" 'kill-this-buffer
+  ("C-c c" 'calendar
+   "C-c C" 'calc
+   "C-x k" 'kill-this-buffer
+   "C-x K" 'kill-buffer-and-window
    "C-/" 'undo-only))
 
 
 
-
 
 (use-package better-defaults
   ;; Disables menu-bar, tool-bar and scroll-bar
@@ -173,6 +175,12 @@
   (super-save-remote-files nil)
   (super-save-auto-save-when-idle t)
   (super-save-idle-duration 30))
+
+(use-package crux
+  :general
+  ("C-c o" 'crux-open-with
+   [(shift return)] 'crux-smart-open-line
+   "C-k" 'crux-smart-kill-line))
 
 
 
@@ -267,7 +275,7 @@
 (use-package frame
   :ensure nil
   :config
-  (modify-all-frames-parameters '((width . 120)
+  (modify-all-frames-parameters '((width . 100)
                                   (height . 60)
                                   (alpha . (98. 90))))
   ;; better frame title
@@ -277,12 +285,22 @@
                    "%b")))))
 
 (use-package winner
-  :config
+  :init
   (winner-mode 1)
+  :custom
+  (winner-dont-bind-my-keys t)
   :general
-  (:prefix "C-c"
-           "w n" 'winner-redo
-           "w p" 'winner-undo))
+  ("s-n" 'winner-redo
+   "s-p" 'winner-undo))
+
+(use-package windmove
+  :ensure nil
+  :general
+  ("s-i" 'windmove-up
+   "s-k" 'windmove-down
+   "s-j" 'windmove-left
+   "s-l" 'windmove-right))
+
 
 (use-package shackle)
 
@@ -396,17 +414,17 @@
 
 
 ;; File organisation
+
 (use-package dired
   :demand
   :ensure nil
-  :init
-  (setq dired-auto-revert-buffer t)
-  (setq dired-listing-switches "-alh")
-  (setq dired-no-confirm
-        '(byte-compile chgrp chmod chown copy load move symlink))
-  (setq dired-deletion-confirmer (lambda (x) t))
+  :hook (dired-mode . (lambda () (setq truncate-lines t)))
   :custom
-  (dired-dwim-target t))
+  (dired-deletion-confirmer #'y-or-n-p)
+  (dired-no-confirm '(byte-compile chgrp chmod chown copy load move symlink))
+  (dired-dwim-target t)
+  (dired-listing-switches "-lh")
+  (dired-auto-revert-buffer t))
 
 (use-package dired-hacks-utils)
 
@@ -645,9 +663,8 @@
   (load-theme 'zenburn t)
   :custom-face
   (mode-line-buffer-id ((t (:height 1.0 :family "Optima"))))
-  (default ((t (:family "Fira Code"))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
-  (org-document-title ((t (:height 2.0 :weight normal :foreground "#8CD0D3" :family "Optima"))))
+  (org-document-title ((t (:height 2.0 :weight normal :foreground "LightSkyBlue" :family "Optima"))))
   (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
   (org-meta-line ((t (:height 0.8 :inherit shadow))))
   (org-special-keyword ((t (:height 0.8))))
@@ -665,10 +682,11 @@
   (org-checkbox-statistics-done ((t (:height 0.8 :inherit (org-done)))))
   (org-tag ((t (:height 0.7))))
   (org-table ((t (:foreground "#9FC59F" :height 0.8))))
-  (org-done ((t (:foreground "LightGreen")))))
+  (org-done ((t (:foreground "LightGreen"))))
+  (org-date ((t (:family "Fira Code" :height 0.8 :underline (:color foreground-color :style line) :foreground "#8CD0D3")))))
 
 (use-package smart-mode-line
-  :config
+  :init
   (sml/setup)
   :custom
   (sml/theme 'dark)

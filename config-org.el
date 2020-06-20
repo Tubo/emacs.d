@@ -55,51 +55,49 @@
 (use-package org-roam
   :config
   (org-roam-mode)
+  :hook
+  (after-init . org-roam-mode)
   :custom
   (org-roam-buffer "*Notes Collection*")
   (org-roam-buffer-position 'bottom)
   (org-roam-completion-system 'ivy)
   (org-roam-directory "~/Dropbox/org/notes/")
   (org-roam-tag-sources '(prop last-directory))
+  (org-roam-link-title-format "%s")
   (org-roam-capture-templates '(("d" "default" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "%<%y%m%d%h%m%s>-${slug}"
+                                 :file-name "%<%Y%m%d%H%M%S>-${slug}"
                                  :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n\n"
+                                 :immediate-finish
                                  :unnarrowed t)
                                 ("r" "reference" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "refs/%<%y%m%d%h%m%s>-${slug}"
+                                 :file-name "refs/%<%Y%m%d%H%M%S>-${slug}"
                                  :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n#+roam_key:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)
                                 ("m" "medical" plain (function org-roam--capture-get-point)
                                  "%?"
-                                 :file-name "med/%<%y%m%d%h%m%s>-${slug}"
+                                 :file-name "med/%<%Y%m%d%H%M%S>-${slug}"
                                  :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)
                                 ("x" "dx / ddx" plain (function org-roam--capture-get-point)
-                                 "%?"
-                                 :file-name "dx/${slug}"
-                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
-                                 :immediate-finish
-                                 :unnarrowed t)
-                                ("s" "signs" plain (function org-roam--capture-get-point)
-                                 "%?"
-                                 :file-name "signs/${slug}"
+                                 (file "~/Dropbox/org/templates/diagnosis.org")
+                                 :file-name "med/dx/${slug}"
                                  :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)))
   :custom-face
-  (org-roam-link ((t (:family "Optima" :foreground "LightSkyBlue" :underline t))))
-  (org-roam-link-current ((t (:family "Optima" :foreground "DarkBlue" :underline t))))
-  (org-roam-link-current ((t (:family "Optima" :foreground "DarkRed" :underline t))))
+  (org-roam-link ((t (:family "Optima" :foreground "LightSkyBlue" :weight bold))))
+  (org-roam-link-current ((t (:family "Optima" :foreground "LawnGreen" :foreground-distant "cyan"))))
+  (org-roam-link-invalid ((t (:family "Optima" :foreground "DarkRed"))))
   :general
   ("C-c f" 'org-roam-find-file
-   "C-c i" 'org-roam-insert)
-  ("C-c n f" 'org-roam-find-file)
-  ("C-c n r" 'org-roam)
-  ("C-c n i" 'org-roam-insert))
+   "C-c i" 'org-roam-insert
+   "C-c I" 'org-roam-insert-immediate)
+  ("C-c n r" 'org-roam
+   "C-c r" 'org-roam))
 
 (use-package org-journal
   :bind
@@ -194,8 +192,7 @@
   (org-ref-open-pdf-function 'my/org-ref-open-pdf-at-point)
   (org-ref-completion-library 'org-ref-ivy-cite))
 
-(use-package org-pomodoro
-  :disabled)
+(use-package org-pomodoro)
 
 (use-package org-drill
   :disabled
@@ -203,8 +200,8 @@
 
 (use-package org-noter
   :disabled
-  :config
-  (add-hook 'org-noter-insert-heading-hook #'org-id-get-create))
+  :hook
+  (org-noter-insert-heading . org-id-get-create))
 
 (use-package org-download
   :demand
