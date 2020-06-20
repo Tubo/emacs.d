@@ -171,7 +171,9 @@
             "<f5>" 'my/org-add-cloze
             "<f6>" 'my/formatted-copy
             "C-," 'my/anki-cloze-dwim
-            "C-c ," 'my/anki-del-cloze-region-or-subtree))
+            "C-<" #'(lambda () (interactive) (my/anki-cloze-dwim -1))
+            "C-c ," 'my/anki-del-cloze-region-or-subtree
+            "C-c k" 'my/anki-del-cloze-at-point))
 
 (use-package org-ref
   :config

@@ -120,7 +120,7 @@
   (interactive "p")
   (let ((largest (my/find-largest-cloze)))
     (unless (use-region-p)
-      (unless (cl-search (string (preceding-char)) "\n ({[")
+      (unless (cl-search (string (preceding-char)) "\n \s\"({[")
         (backward-word))
       (mark-word))
     (cond ((= arg 1)
@@ -152,17 +152,17 @@
       (while (search-forward-regexp "{{c.*?}}" nil t)
         (my/anki-del-cloze-at-point)))))
 
+
 (defun my/anki-reorder-cloze-number ()
   (interactive)
   (save-excursion
     (save-restriction
       (org-back-to-heading)
       (org-narrow-to-subtree)
-      (let (point cur (prev 0) (count 0))
+      (let (point cur (prevs '()) (count 0))
         (while (re-search-forward "{{c\\([0-9]*\\)" nil t)
           (setq cur (string-to-number (match-string 1)))
+          (unless (member cur prevs) (push cur prevs))
           (replace-match (number-to-string
-                          (if (= prev cur)
-                              count
-                            (setq count (1+ count)))) nil nil nil 1)
+                          (- (length prevs) (cl-position cur prevs))) nil nil nil 1)
           (setq prev cur))))))
