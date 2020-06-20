@@ -1,5 +1,5 @@
 #+BEGIN_SRC bash
 touch init.el
-echo (load (expand-file-name "personal/main.el" user-emacs-directory)) > init.el
+echo (load (expand-file-name "config/main.el" user-emacs-directory)) > init.el
 #+END_SRC
 
