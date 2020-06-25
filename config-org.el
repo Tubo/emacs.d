@@ -59,7 +59,7 @@
   (after-init . org-roam-mode)
   :custom
   (org-roam-buffer "*Notes Collection*")
-  (org-roam-buffer-position 'bottom)
+  (org-roam-buffer-position 'right)
   (org-roam-completion-system 'ivy)
   (org-roam-directory "~/Dropbox/org/notes/")
   (org-roam-tag-sources '(prop last-directory))

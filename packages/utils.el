@@ -67,8 +67,30 @@
   (anki-editor--anki-connect-invoke-result
    "guiCurrentCard" '()))
 
+(defun my/anki-update-current-cloze ()
+  (interactive)
+  (save-window-excursion
+    (save-restriction
+      (org-narrow-to-subtree)
+      (let* ((note-id (org-entry-get (point) "ANKI_CARD_ID"))
+             (buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t))
+             (html (with-current-buffer buf (buffer-string)))
+             (current (my/anki-current-card))
+             (template (alist-get 'template current))
+             (anki-id (alist-get 'cardId current)))
+        (kill-buffer buf)
+        (unless (string-equal "Cloze" template)
+          (error "The card type you are viewing is not a Cloze"))
+        (unless note-id
+          (my/anki-update-cloze anki-id html)
+          (org-set-property "ANKI_CARD_ID" anki-id))
+        (if (/= note-id anki-id)
+            (error "The note you are seeing has a different ID from the note property.")
+          (my/anki-update-cloze (string-to-number id) html))))))
+
+
 (defun my/formatted-copy ()
-  "Export region to HTML, and copy it to the clipboard."
+  "Export region or subtree to HTML, and then copy it to the clipboard."
   (interactive)
   (save-window-excursion
     (save-restriction
@@ -120,8 +142,8 @@
   (interactive "p")
   (let ((largest (my/find-largest-cloze)))
     (unless (use-region-p)
-      (unless (cl-search (string (preceding-char)) "\n \s\"({[")
-        (backward-word))
+      (unless (string-match "[^a-z0-9A-Z]" (string (preceding-char)))
+        (forward-to-word 1))
       (mark-word))
     (cond ((= arg 1)
            (my/anki-cloze (region-beginning) (region-end) (1+ largest)))
@@ -130,7 +152,7 @@
           ((= arg -1)
            (my/anki-cloze (region-beginning) (region-end) largest))))
   (forward-sexp)
-  (forward-to-word 1))
+  (backward-to-word 1))
 
 (defun my/anki-del-cloze-at-point ()
   (interactive)
@@ -151,7 +173,6 @@
       (goto-char (point-min))
       (while (search-forward-regexp "{{c.*?}}" nil t)
         (my/anki-del-cloze-at-point)))))
-
 
 (defun my/anki-reorder-cloze-number ()
   (interactive)

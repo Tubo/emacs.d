@@ -17,6 +17,7 @@
 
 ;; Initialise 'use-package and 'general
 ;; ==================================
+
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -137,8 +138,8 @@
      (mac-auto-operator-composition-mode)
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
     (gnu/linux
-     (set-frame-font "Source Code Variable")
-     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Noto Sans"))))))
+     (set-frame-font "Noto Mono Nerd Font")
+     (custom-set-faces '(variable-pitch ((t (:height 1.0 :family "Noto Sans"))))))
     (windows-nt
      (set-frame-font "Source Code Pro")
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))))
@@ -148,7 +149,7 @@
 
   :general
   ("C-c c" 'calendar
-   "C-c C" 'calc
+   "C-x c" 'calc
    "C-x k" 'kill-this-buffer
    "C-x K" 'kill-buffer-and-window
    "C-/" 'undo-only))
@@ -275,8 +276,8 @@
 (use-package frame
   :ensure nil
   :config
-  (modify-all-frames-parameters '((width . 100)
-                                  (height . 60)
+  (modify-all-frames-parameters '((width . 0.4)
+                                  (height . 0.6)
                                   (alpha . (98. 90))))
   ;; better frame title
   (setq frame-title-format
@@ -359,6 +360,14 @@
 (use-package counsel-projectile
   :config
   (counsel-projectile-mode))
+
+
+
+
+
+;; Docker
+(use-package docker
+  :if (memq window-system '(mac)))
 
 
 
@@ -683,6 +692,7 @@
   (org-tag ((t (:height 0.7))))
   (org-table ((t (:foreground "#9FC59F" :height 0.8))))
   (org-done ((t (:foreground "LightGreen"))))
+  (org-code ((t (:family "Fira Code" :height 0.8 :inherit (shadow)))))
   (org-date ((t (:family "Fira Code" :height 0.8 :underline (:color foreground-color :style line) :foreground "#8CD0D3")))))
 
 (use-package smart-mode-line
