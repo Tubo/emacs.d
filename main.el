@@ -6,39 +6,30 @@
 (setq gnutls-min-prime-bits 4096)
 
 
-;; Packages repositories
-
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "http://orgmode.org/elpa/")
-                         ("gnu" . "https://elpa.gnu.org/packages/")))
-(add-to-list 'load-path "~/.emacs.d/config/packages/")
-(package-initialize)
+
 
 
 ;; Initialise 'use-package and 'general
 ;; ==================================
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-(eval-when-compile
-  (require 'use-package)
-  (require 'use-package-ensure)
-  (setq use-package-always-ensure t))
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-(use-package quelpa
-  :config
-  :custom
-  (quelpa-upgrade-interval 7)
-  (quelpa-checkout-melpa-p nil)
-  (quelpa-self-upgrade-p nil))
-
-(use-package quelpa-use-package)
+(setq straight-use-package-by-default t)
+(straight-use-package 'use-package)
 
 (use-package general)
-
 (use-package key-chord)
-
 (use-package restart-emacs)
 
 
@@ -46,8 +37,9 @@
 
 ;; Built-in settings
 ;; ================
+
 (use-package my/settings
-  :ensure nil
+  :straight nil
   ;; ===== INITIAL =====
   :init
   (setq
@@ -165,7 +157,7 @@
 
 (use-package load-relative
   ;; Load ELisp file using relative location
-  :pin gnu)
+  )
 
 (use-package super-save
   ;; Autosave
@@ -274,7 +266,7 @@
 
 ;; multi-frame management independent of window systems
 (use-package frame
-  :ensure nil
+  :straight nil
   :config
   (modify-all-frames-parameters '((width . 0.4)
                                   (height . 0.6)
@@ -295,7 +287,7 @@
    "s-p" 'winner-undo))
 
 (use-package windmove
-  :ensure nil
+  :straight nil
   :general
   ("s-i" 'windmove-up
    "s-k" 'windmove-down
@@ -426,7 +418,7 @@
 
 (use-package dired
   :demand
-  :ensure nil
+  :straight nil
   :hook (dired-mode . (lambda () (setq truncate-lines t)))
   :custom
   (dired-deletion-confirmer #'y-or-n-p)
@@ -502,6 +494,7 @@
   (global-hungry-delete-mode))
 
 (use-package flycheck
+  :disabled
   :hook (emacs-lisp-mode . flycheck-mode))
 
 
@@ -624,13 +617,6 @@
 
 
 
-;; Org-mode
-
-(load-relative "config-org.el")
-
-
-
-
 
 ;; References
 
@@ -657,13 +643,6 @@
 
 
 
-;; Load custom.el
-;; Don't load for now
-(load custom-file)
-
-
-
-
 
 ;; Theme
 
@@ -677,6 +656,7 @@
   (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
   (org-meta-line ((t (:height 0.8 :inherit shadow))))
   (org-special-keyword ((t (:height 0.8))))
+  (org-property-value ((t (:foreground "DarkGray" :inherit org-special-keyword))))
   (org-ellipsis ((t (:underline nil :height 0.5))))
   (org-level-1 ((t (:height 1.2 :weight medium :inherit outline-1))))
   (org-level-2 ((t (:height 1.1 :inherit outline-2))))
@@ -736,3 +716,18 @@
 (use-package all-the-icons-ivy
   :init
   (all-the-icons-ivy-setup))
+
+
+
+
+
+;; Org-mode
+
+(load-relative "config-org.el")
+
+
+
+
+;; Load custom.el
+
+(load custom-file)

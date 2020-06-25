@@ -1,6 +1,5 @@
 (use-package org
-  :pin org
-  :ensure org-plus-contrib
+  :straight org-plus-contrib
   :hook ((org-mode . (lambda () (visual-line-mode 1)))
          (org-mode . (lambda () (abbrev-mode 1)))
          (org-mode . (lambda () (yas-minor-mode 1)))
@@ -8,11 +7,6 @@
   :config
   (require 'org-tempo)
   (yas-reload-all)
-  (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "†")
-                                         ("#+END_SRC" . "†")
-                                         ("#+begin_src" . "†")
-                                         ("#+end_src" . "†")
-                                         ("#+RESULTS:" . ">")))
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (org-clock-persistence-insinuate)
 
@@ -53,8 +47,6 @@
 
 
 (use-package org-roam
-  :config
-  (org-roam-mode)
   :hook
   (after-init . org-roam-mode)
   :custom
@@ -145,18 +137,16 @@
   (org-superstar-prettify-item-bullets nil))
 
 (use-package org-fc
-  :disabled
-  :quelpa (org-fc :fetcher github :repo "l3kn/org-fc")
+  :straight (org-fc
+             :type git :host github :repo "l3kn/org-fc"
+             :files (:defaults "awk" "demo.org"))
   :config
   (require 'org-fc-hydra)
   :custom
   (org-fc-directories `(,org-roam-directory)))
 
 (use-package anki-editor
-  ;; :quelpa (anki-editor :fetcher github :repo "tubo/anki-editor")
-  ;; :quelpa (anki-editor :fetcher file :path "~/Projects/anki-editor")
   :after org
-  :load-path "~/Projects/anki-editor/"
   :hook
   (org-mode . anki-editor-mode)
   (org-mode . hi-lock-mode)
@@ -204,6 +194,7 @@
   (org-noter-insert-heading . org-id-get-create))
 
 (use-package org-download
+  :disabled
   :demand
   :hook (dired-mode . org-download-enable)
   :custom
@@ -232,5 +223,6 @@
   :after ox)
 
 (use-package ox-cv
+  :disabled
   :load-path "~/.emacs.d/config/packages/"
   :after ox)
