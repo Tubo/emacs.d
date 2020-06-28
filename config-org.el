@@ -30,7 +30,7 @@
   (org-odd-levels-only nil)
   (org-ellipsis " ⤵")
   (org-hide-leading-stars t)
-
+  (org-enforce-todo-dependencies t)
   ;; Babel
   (org-confirm-babel-evaluate nil)
   (org-src-fontify-natively t)
@@ -71,13 +71,13 @@
                                 ("m" "medical" plain (function org-roam--capture-get-point)
                                  "%?"
                                  :file-name "med/%<%Y%m%d%H%M%S>-${slug}"
-                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
+                                 :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)
                                 ("x" "dx / ddx" plain (function org-roam--capture-get-point)
                                  (file "~/Dropbox/org/templates/diagnosis.org")
                                  :file-name "med/dx/${slug}"
-                                 :head "#+title: ${title}\n#+ROAM_ALIAS:\n#+roam_tags:\n\n"
+                                 :head "#+title: ${title}\n#+roam_alias:\n#+roam_tags:\n\n"
                                  :immediate-finish
                                  :unnarrowed t)))
   :custom-face

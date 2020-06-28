@@ -27,6 +27,7 @@
 
 (setq straight-use-package-by-default t)
 (straight-use-package 'use-package)
+(add-to-list 'load-path "~/.emacs.d/config/packages/")
 
 (use-package general)
 (use-package key-chord)
@@ -62,14 +63,16 @@
    eval-expression-print-length nil
    eval-expression-print-level nil
    custom-file (expand-file-name "config/custom.el" user-emacs-directory)
-   abbrev-file-name (expand-file-name "personal/abbrev_defs" user-emacs-directory)
+   abbrev-file-name (expand-file-name "config/abbrev_defs" user-emacs-directory)
    inhibit-splash-screen t
    inhibit-startup-message t
    inhibit-default-init t
    mac-command-modifier 'meta
    mac-option-modifier 'super
    mac-control-modifier 'control
+   hi-lock-file-patterns-policy #'(lambda (_) t)
    auto-revert-verbose nil)
+
   (setq-default
    tab-width 4
    indent-tabs-mode nil
@@ -96,7 +99,7 @@
   (display-time)
 
   ;; Display buffer size
-  (size-indication-mode)
+  (size-indication-mode 1)
 
   ;; encoding
   (set-default-coding-systems 'utf-8)
@@ -112,22 +115,24 @@
     (let ((inhibit-read-only t))
       (ansi-color-apply-on-region
        compilation-filter-start (point))))
-
   (add-hook 'compilation-filter-hook #'my/colorize-compilation)
 
   ;; stop truncate lines in prog-mode
-  (add-hook 'prog-mode-hook 'toggle-truncate-lines)
+  (add-hook 'prog-mode-hook (lambda () (toggle-truncate-lines +1)))
 
   ;; enable or disable modes
   (electric-pair-mode +1)
   (blink-cursor-mode +1)
   (put 'narrow-to-region 'disabled nil)
 
+  ;; Help-mode
+  (setq help-window-select 'other)
+
   ;; fonts - depending on the OS
   (cl-case system-type
     (darwin
-     (set-frame-font "Hack Nerd Font" nil t)
-     (mac-auto-operator-composition-mode)
+     (add-to-list 'default-frame-alist '(font . "Hack Nerd Font-12"))
+     (mac-auto-operator-composition-mode t)
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
     (gnu/linux
      (set-frame-font "Noto Mono Nerd Font")
@@ -135,9 +140,6 @@
     (windows-nt
      (set-frame-font "Source Code Pro")
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))))
-
-  ;; Help-mode
-  (setq help-window-select 'other)
 
   :general
   ("C-c c" 'calendar
@@ -597,6 +599,13 @@
 (use-package json-mode
   :mode "\\.json\\'")
 
+;; Yaml
+(use-package yaml-mode
+  :mode "\\.yml\\'"
+  :general
+  (:keymaps 'yaml-mode-map
+            "C-m" 'newline-and-indent))
+
 
 
 
@@ -653,8 +662,10 @@
   (mode-line-buffer-id ((t (:height 1.0 :family "Optima"))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
   (org-document-title ((t (:height 2.0 :weight normal :foreground "LightSkyBlue" :family "Optima"))))
-  (org-drawer ((t (:height 0.8 :foreground "LightSkyBlue"))))
-  (org-meta-line ((t (:height 0.8 :inherit shadow))))
+  (org-drawer ((t (:height 0.8 :inherit shadow))))
+  (org-block-begin-line ((t (:height 0.8 :inherit shadow))))
+  (org-block-end-line ((t (:height 0.8 :inherit shadow))))
+  (org-meta-line ((t (:height 0.8 :foreground "gainsboro" :inherit shadow))))
   (org-special-keyword ((t (:height 0.8))))
   (org-property-value ((t (:foreground "DarkGray" :inherit org-special-keyword))))
   (org-ellipsis ((t (:underline nil :height 0.5))))
@@ -669,11 +680,11 @@
   (org-block ((t (:height 0.8))))
   (org-checkbox-statistics-todo ((t (:height 0.8 :inherit (org-todo)))))
   (org-checkbox-statistics-done ((t (:height 0.8 :inherit (org-done)))))
-  (org-tag ((t (:height 0.7))))
+  (org-tag ((t (:height 0.7 :inherit shadow))))
   (org-table ((t (:foreground "#9FC59F" :height 0.8))))
   (org-done ((t (:foreground "LightGreen"))))
-  (org-code ((t (:family "Fira Code" :height 0.8 :inherit (shadow)))))
-  (org-date ((t (:family "Fira Code" :height 0.8 :underline (:color foreground-color :style line) :foreground "#8CD0D3")))))
+  (org-code ((t (:height 0.9 :foreground "gainsboro"))))
+  (org-date ((t (:height 0.8 :underline (:color foreground-color :style line) :foreground "#8CD0D3")))))
 
 (use-package smart-mode-line
   :init
