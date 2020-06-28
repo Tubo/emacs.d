@@ -320,6 +320,7 @@
   :general
   ("M-x" 'counsel-M-x
    "C-x C-f" 'counsel-find-file
+   "C-x d" 'counsel-dired
    "C-S-s" 'counsel-ag)
   (minibuffer-local-map
    "C-r" 'counsel-minibuffer-history))
@@ -460,6 +461,20 @@
 
 
 ;; General editing
+
+(use-package rime
+  :straight (rime :type git
+                  :host github
+                  :repo "DogLooksGood/emacs-rime"
+                  :files ("*.el" "Makefile" "lib.c"))
+  :custom
+  (rime-librime-root "~/.emacs.d/rime-1.5.3-osx/dist")
+  (rime-user-data-dir "~/.emacs.d/config/rime")
+  (default-input-method "rime")
+  (rime-show-candidate 'minibuffer)
+  :general
+  (:keymaps 'rime-mode-map
+            "C-`" 'rime-send-keybinding))
 
 (use-package expand-region
   :general
