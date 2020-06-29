@@ -1,2 +1,6 @@
 /custom.el
 flycheck_*.el
+/rime/build/
+/rime/user.yaml
+/rime/*.userdb/
+/rime/sync/

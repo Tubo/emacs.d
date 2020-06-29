@@ -140,28 +140,30 @@
   :straight (org-fc
              :type git :host github :repo "l3kn/org-fc"
              :files (:defaults "awk" "demo.org"))
-  :config
-  (require 'org-fc-hydra)
   :custom
   (org-fc-directories `(,org-roam-directory)))
 
 (use-package anki-editor
-  :after org
   :hook
-  (org-mode . anki-editor-mode)
   (org-mode . hi-lock-mode)
-  :custom
-  (anki-editor-create-decks t)
-  :config
-  (load-file "~/.emacs.d/config/packages/utils.el")
+  :init
+  (load "anki.el")
+  (font-lock-add-keywords 'org-mode '(("{{c[0-9]*::\\(.*?\\)\\(::.*?\\)?}}" (0 'shadow) (1 'bold t))) t)
   :general
   (:keymaps 'org-mode-map
-            "<f5>" 'my/org-add-cloze
+            "<f5>" 'my/anki-add-cloze
             "<f6>" 'my/formatted-copy
             "C-," 'my/anki-cloze-dwim
-            "C-<" #'(lambda () (interactive) (my/anki-cloze-dwim -1))
+            "C-<" '(lambda () (interactive) (my/anki-cloze-dwim -1))
             "C-c ," 'my/anki-del-cloze-region-or-subtree
             "C-c k" 'my/anki-del-cloze-at-point))
+
+(use-package valign
+  :straight (valign
+             :type git :host github :repo "casouri/valign")
+  :hook
+  (after-init . valign-mode))
+
 
 (use-package org-ref
   :config
