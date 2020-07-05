@@ -20,6 +20,7 @@
   (org-export-backends '(ascii html latex org))
   (org-pretty-entities t)
   (org-startup-indented t)
+  (org-startup-folded 'fold)
   (org-startup-with-inline-images t)
   (org-image-actual-width '(500))
   (org-edit-src-content-indentation 0)
@@ -30,7 +31,9 @@
   (org-odd-levels-only nil)
   (org-ellipsis " ⤵")
   (org-hide-leading-stars t)
+  (org-hide-emphasis-markers t)
   (org-enforce-todo-dependencies t)
+  (org-attach-auto-tag nil)
   ;; Babel
   (org-confirm-babel-evaluate nil)
   (org-src-fontify-natively t)
@@ -196,13 +199,13 @@
   (org-noter-insert-heading . org-id-get-create))
 
 (use-package org-download
-  :disabled
   :demand
   :hook (dired-mode . org-download-enable)
   :custom
   (org-download-display-inline-images nil)
-  (org-download-method 'directory)
+  (org-download-method 'attach)
   (org-download-image-html-width 500)
+  (org-download-backend 'curl)
   (org-download-screenshot-file (expand-file-name "screenshot.jpg" temporary-file-directory))
   (org-download-screenshot-method "screencapture -t 'jpg' -i %s"))
 

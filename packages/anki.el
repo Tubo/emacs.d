@@ -1,5 +1,16 @@
 (require 'request)
 
+(defvar my/anki--ext-plist
+  '(
+    :export-options (visible-only)
+    :section-numbers nil
+    :headline-numbering nil
+    :headline-offset 1
+    :headline-levels 1
+    :with-todo-keywords nil
+    :with-toc nil)
+  "Options for html export")
+
 (defun my/anki--connect-action (action &optional params version)
   (let (a)
     (when version
@@ -99,18 +110,20 @@
   "Push the current heading or region to Anki."
   (interactive)
   (let ((context (read-string "Context: " (car minibuffer-history) '(minibuffer-history . 0))))
-    (save-window-excursion
-      (save-restriction
-        (org-narrow-to-subtree)
-        (let* ((deck (org-entry-get-with-inheritance "ANKI_DECK"))
-               (id (org-entry-get (point) "ANKI_NOTE_ID"))
-               (buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t))
-               (html (with-current-buffer buf (buffer-string))))
-          (kill-buffer buf)
-          (if id
-              (my/anki--update-cloze (string-to-number id) html context)
-            (setq id (my/anki--add-cloze deck html context))
-            (org-set-property "ANKI_NOTE_ID" (number-to-string id))))))))
+    (save-restriction
+      (org-narrow-to-subtree)
+      (my/anki-reorder-cloze-number)
+      (let* ((deck (org-entry-get-with-inheritance "ANKI_DECK"))
+             (id (org-entry-get (point) "ANKI_NOTE_ID"))
+             (body-end (save-excursion
+                         (org-next-visible-heading 1)
+                         (point)))
+             (content (buffer-substring (point-min) body-end))
+             (html (org-export-string-as content 'html t my/anki--ext-plist)))
+        (if id
+            (my/anki--update-cloze (string-to-number id) html context)
+          (setq id (my/anki--add-cloze deck html context))
+          (org-set-property "ANKI_NOTE_ID" (number-to-string id)))))))
 
 
 
@@ -124,27 +137,32 @@
   (my/anki--connect-invoke-result
    "guiCurrentCard" '()))
 
-(defun my/formatted-copy ()
-  "Export region or subtree to HTML, and then copy it to the clipboard."
-  (interactive)
+(defun my/formatted-copy (args)
+  "Export region or subtree to HTML, and then copy it to the clipboard.
+If ARGS is non-nil, export subtree as visible only (slower) without clozes."
+  (interactive "P")
   (save-window-excursion
     (save-restriction
       (unless (use-region-p)
         (org-back-to-heading)
-        (org-narrow-to-subtree)
-        (my/anki-reorder-cloze-number))
-      (let* ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t '(:H 0)))
-             (html (with-current-buffer buf (buffer-string))))
-        (with-current-buffer buf
-          (shell-command-on-region
-           (point-min)
-           (point-max)
-           "textutil -stdin -format html -convert rtf -stdout | pbcopy"
-           ;; "pandoc -f html -t rtf | pbcopy -Prefer rtf"
-           ))
-        (kill-buffer buf))))
+        (org-narrow-to-subtree))
+      (my/anki-reorder-cloze-number)
+      (if args                          ; to export a non-clozed version
+          (let ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t '(:headline-levels 1))))
+            (with-current-buffer buf
+              (mark-whole-buffer)
+              (my/anki-del-cloze-region-or-subtree)
+              (shell-command-on-region (point-min) (point-max)
+                                       "textutil -stdin -format html -convert rtf -stdout | pbcopy")))
+        (save-excursion
+          (let* ((content (if (use-region-p)
+                              (buffer-substring (region-beginning) (region-end))
+                            (org-next-visible-heading 1)
+                            (buffer-substring (point-min) (point))))
+                 (output (org-export-string-as content 'html t my/anki--ext-plist)))
+            (shell-command
+             (format "echo \"%s\" | textutil -stdin -format html -convert rtf -stdout | pbcopy" output)))))))
   (message "Content copied as html."))
-
 
 ;;; Add cloze for text
 
@@ -173,30 +191,61 @@
                 (princ "}}"))))))
 
 (defun my/anki-cloze-dwim (arg)
-  "Cloze region without hint and set cloze number by ARG."
+  "Cloze region without hint and set cloze number by ARG.
+If within a cloze already, then recloze the point with the old ID."
   (interactive "p")
-  (let ((largest (my/anki--get-largest-cloze-id)))
-    (unless (use-region-p)
-      (unless (string-match "[^a-z0-9A-Z]" (string (preceding-char)))
-        (forward-to-word 1))
-      (mark-word))
-    (cond ((= arg 1)
-           (my/anki--cloze-region (region-beginning) (region-end) (1+ largest)))
-          ((> arg 1)
-           (my/anki--cloze-region (region-beginning) (region-end) arg))
-          ((= arg -1)
-           (my/anki--cloze-region (region-beginning) (region-end) largest))))
+  (save-restriction
+    (org-narrow-to-subtree)
+    (let* ((largest (my/anki--get-largest-cloze-id))
+           (within-clozep (my/anki--within-clozep))
+           (cloze-id (my/anki--current-cloze-id)))
+
+      (when within-clozep
+        ;; Delete the old cloze if the point is within a cloze already.
+        (my/anki-del-cloze-at-point))
+
+      (unless (use-region-p)
+        (unless (string-match "[^a-z0-9A-Z]" (string (preceding-char)))
+          (forward-to-word 1))
+        (mark-word))
+
+      (my/anki--cloze-region (region-beginning) (region-end)
+                             (cond (cloze-id cloze-id) ; use the current-cloze if able
+                                   ((= arg 1) (1+ largest))
+                                   ((> arg 1) arg)
+                                   ((= arg -1) largest)))))
   (forward-sexp)
   (backward-to-word 1))
 
+(defun my/anki--within-clozep ()
+  "Return t if the point is currently within a cloze marking."
+  (save-excursion
+    (save-restriction
+      (org-narrow-to-subtree)
+      (let* ((init (point))
+             (open (search-backward "{{c" nil t 1))
+             (close (search-forward "}}" nil t 1)))
+        (and (and open close)           ; both braces must be present
+             (< open init)
+             (< init close))))))
+
+(defun my/anki--current-cloze-id ()
+  "Return the id if the point is within a cloze, otherwise nil."
+  (save-excursion
+    (when (my/anki--within-clozep)
+      (search-backward "{{c" nil t)
+      (search-forward "{{c" nil t)
+      (thing-at-point 'number))))
+
 (defun my/anki-del-cloze-at-point ()
   (interactive)
-  (when (string= (string (following-char)) "{")
-    (forward-char 2))
-  (search-backward "{{")
-  (zap-to-char 2 (string-to-char ":"))
-  (search-forward "}}")
-  (delete-backward-char 2))
+  (save-excursion
+    (when (string= (string (following-char)) "{")
+      (forward-char 2))
+    (search-backward "{{")
+    (zap-to-char 2 (string-to-char ":"))
+    (search-forward "}}")
+    (delete-backward-char 2)))
 
 (defun my/anki-del-cloze-region-or-subtree ()
   (interactive)

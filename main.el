@@ -70,13 +70,31 @@
    mac-command-modifier 'meta
    mac-option-modifier 'super
    mac-control-modifier 'control
-   hi-lock-file-patterns-policy #'(lambda (_) t)
-   auto-revert-verbose nil)
+   hi-lock-file-patterns-policy #'(lambda (_) t))
+
+  ;; scrolling
+  ;; Vertical Scroll
+  (setq
+   scroll-step 1
+   scroll-margin 1
+   scroll-conservatively 101
+   scroll-up-aggressively 0.01
+   scroll-down-aggressively 0.01
+   auto-window-vscroll nil
+   fast-but-imprecise-scrolling nil
+   mouse-wheel-scroll-amount '(1 ((shift) . 1))
+   mouse-wheel-progressive-speed nil
+   ;; Horizontal Scroll
+   hscroll-step 1
+   hscroll-margin 1)
 
   (setq-default
    tab-width 4
    indent-tabs-mode nil
-   c-basic-offset 4)
+   c-basic-offset 4
+   compilation-always-kill t
+   compilation-ask-about-save nil
+   compilation-scroll-output t)
 
   ;; disable full 'yes' and 'no' answers
   (defalias 'yes-or-no-p 'y-or-n-p)
@@ -136,7 +154,7 @@
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
     (gnu/linux
      (set-frame-font "Noto Mono Nerd Font")
-     (custom-set-faces '(variable-pitch ((t (:height 1.0 :family "Noto Sans"))))))
+     (custom-set-faces '(variable-pitch ((t (:height 1.0 :family "Noto Sans Nerd Font"))))))
     (windows-nt
      (set-frame-font "Source Code Pro")
      (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))))
@@ -172,8 +190,14 @@
   (super-save-idle-duration 30))
 
 (use-package crux
+  :config
+  (defalias 'rename-file-and-buffer #'crux-rename-file-and-buffer)
+  (crux-with-region-or-buffer indent-region)
+  (crux-with-region-or-buffer untabify)
+  (crux-with-region-or-point-to-eol kill-ring-save)
   :general
-  ("C-c o" 'crux-open-with
+  ("C-a" 'crux-move-beginning-of-line
+   "C-c o" 'crux-open-with
    [(shift return)] 'crux-smart-open-line
    "C-k" 'crux-smart-kill-line))
 
@@ -211,6 +235,8 @@
   :general
   ("C-c s" 'eshell))
 
+(use-package vterm
+  :disabled t)
 
 
 
@@ -240,7 +266,10 @@
 (use-package autorevert
   :hook (dired-mode . auto-revert-mode)
   :config
-  (global-auto-revert-mode 1))
+  (global-auto-revert-mode 1)
+  :custom
+  (auto-revert-verbose nil)
+  (auto-revert-use-notify nil))
 
 
 
@@ -280,10 +309,21 @@
                    "%b")))))
 
 (use-package winner
-  :init
+  :config
   (winner-mode 1)
   :custom
   (winner-dont-bind-my-keys t)
+  (winner-boring-buffers
+   '("*Completions*"
+     "*Compile-Log*"
+     "*inferior-lisp*"
+     "*Fuzzy Completions*"
+     "*Apropos*"
+     "*Help*"
+     "*cvs*"
+     "*Buffer List*"
+     "*Ibuffer*"
+     "*esh command on file*"))
   :general
   ("s-n" 'winner-redo
    "s-p" 'winner-undo))
@@ -305,29 +345,38 @@
 ;; File, buffer and pointer navigation
 
 (use-package ivy
-  :init
-  (setq ivy-use-virtual-buffers t)
-  (setq enable-recursive-minibuffers t)
   :config
-  (ivy-mode t)
+  (ivy-mode 1)
+  :custom
+  (ivy-use-virtual-buffers t)
+  (enable-recursive-minibuffers t)
   :general
-  ("C-s" 'swiper
-   "C-c C-r" 'ivy-resume))
+  ("C-c C-r" 'ivy-resume
+   "C-x B" 'ivy-switch-buffer-other-window)
+  (:keymaps 'ivy-minibuffer-map
+            "M-RET" 'ivy-immediate-done))
+
+(use-package ivy-hydra
+  :after ivy)
+
+(use-package amx)
 
 (use-package counsel
+  :after ivy
   :config
-  (counsel-mode t)
+  (counsel-mode 1)
   :general
-  ("M-x" 'counsel-M-x
-   "C-x C-f" 'counsel-find-file
+  ("C-x C-f" 'counsel-find-file
    "C-x d" 'counsel-dired
    "C-S-s" 'counsel-ag)
   (minibuffer-local-map
    "C-r" 'counsel-minibuffer-history))
 
 (use-package swiper
+  :after ivy
   :general
-  ("C-s" 'swiper))
+  ("C-s" 'swiper)
+  ("C-r" 'swiper))
 
 (use-package avy
   ;; Jump to things in Emacs tree-style
@@ -371,48 +420,171 @@
 ;; Auto-completion
 
 (use-package company
-  :init
-  (setq company-idle-delay 0.3
-        company-tooltip-limit 20
-        company-minimum-prefix-length 2)
-  :hook (prog-mode . company-mode)
+  :ghook 'prog-mode-hook 'LaTeX-mode 'latex-mode
   :config
-  (setq tab-always-indent 'complete)
   (defvar completion-at-point-functions-saved nil)
 
-  (defun company-indent-for-tab-command (&optional arg)
-    (interactive "P")
-    (let ((completion-at-point-functions-saved completion-at-point-functions)
-          (completion-at-point-functions '(company-complete-common-wrapper)))
-      (indent-for-tab-command arg)))
-
-  (defun company-complete-common-wrapper ()
-    (let ((completion-at-point-functions completion-at-point-functions-saved))
-      (company-complete-common)))
-
-  (add-to-list 'company-backends 'company-dabbrev t)
-  (add-to-list 'company-backends 'company-ispell t)
-  (add-to-list 'company-backends 'company-files t)
-  (add-to-list 'company-begin-commands 'outshine-self-insert-command)
-  (setq company-backends (remove 'company-ropemacs company-backends))
-
-  (defun my-company-elisp-setup ()
+  (defun my/company-elisp-setup ()
     (set (make-local-variable 'company-backends)
          '((company-capf :with company-dabbrev-code))))
 
+  (defun my/yas-expand-next-field-complete ()
+    (interactive)
+    (if yas-minor-mode
+        (let ((old-point (point))
+              (old-tick (buffer-chars-modified-tick)))
+          (yas-expand)
+          (when (and (eq old-point (point))
+                     (eq old-tick (buffer-chars-modified-tick)))
+            (ignore-errors (yas-next-field))
+            (when (and (eq old-point (point))
+                       (eq old-tick (buffer-chars-modified-tick)))
+              (company-complete-common))))
+      (company-complete-common)))
+
+  (setq company-backends (remove 'company-ropemacs company-backends))
+
   ;; Usage based completion sorting
   (use-package company-statistics
-    :hook ((emacs-lisp-mode lisp-interaction-mode) . my-company-elisp-setup)
-    :config (company-statistics-mode)))
+    :hook ((emacs-lisp-mode lisp-interaction-mode) . my/company-elisp-setup)
+    :config (company-statistics-mode))
 
-;; Popup documentation for completion candidates
-(use-package company-quickhelp
-  :init
-  (setq company-quickhelp-use-propertized-text t)
-  (setq company-quickhelp-delay 1)
+  :custom
+  (company-idle-delay 0.3)
+  (company-tooltip-limit 10)
+  (company-minimum-prefix-length 2)
+  (tab-always-indent 'complete)
+  :general
+  (:keymaps 'company-active-map
+            "TAB" 'my/yas-expand-next-field-complete))
+
+(use-package company-tabnine
+  :after company
+  :custom
+  (company-tabnine-max-num-results 9)
+  (company-idle-delay 0)
+  (company--show-numbers t)
+  :bind
+  (("M-q" . company-other-backend))
+  :hook
+  (lsp-after-open . (lambda ()
+                      (setq company-tabnine-max-num-results 3)
+                      (add-to-list 'company-transformers 'company//sort-by-tabnine t)
+                      (add-to-list 'company-backends '(company-lsp :with company-tabnine :separate))))
+  (kill-emacs . company-tabnine-kill-process)
   :config
-  (company-quickhelp-mode 1))
+  ;; Enable TabNine on default
+  (add-to-list 'company-backends #'company-tabnine)
 
+  ;; Integrate company-tabnine with lsp-mode
+  (defun company//sort-by-tabnine (candidates)
+    (if (or (functionp company-backend)
+            (not (and (listp company-backend) (memq 'company-tabnine company-backend))))
+        candidates
+      (let ((candidates-table (make-hash-table :test #'equal))
+            candidates-lsp
+            candidates-tabnine)
+        (dolist (candidate candidates)
+          (if (eq (get-text-property 0 'company-backend candidate)
+                  'company-tabnine)
+              (unless (gethash candidate candidates-table)
+                (push candidate candidates-tabnine))
+            (push candidate candidates-lsp)
+            (puthash candidate t candidates-table)))
+        (setq candidates-lsp (nreverse candidates-lsp))
+        (setq candidates-tabnine (nreverse candidates-tabnine))
+        (nconc (seq-take candidates-tabnine 3)
+               (seq-take candidates-lsp 6))))))
+
+(use-package company-box
+  :diminish
+  :after company
+  :functions (my-company-box--make-line
+              my-company-box-icons--elisp)
+  :commands (company-box--get-color
+             company-box--resolve-colors
+             company-box--add-icon
+             company-box--apply-color
+             company-box--make-line
+             company-box-icons--elisp)
+  :hook (company-mode . company-box-mode)
+  :custom
+  (company-box-backends-colors nil)
+  (company-box-show-single-candidate t)
+  (company-box-max-candidates 50)
+  (company-box-doc-delay 0.3)
+  :config
+  ;; Support `company-common'
+  (defun my-company-box--make-line (candidate)
+    (-let* (((candidate annotation len-c len-a backend) candidate)
+            (color (company-box--get-color backend))
+            ((c-color a-color i-color s-color) (company-box--resolve-colors color))
+            (icon-string (and company-box--with-icons-p (company-box--add-icon candidate)))
+            (candidate-string (concat (propertize (or company-common "") 'face 'company-tooltip-common)
+                                      (substring (propertize candidate 'face 'company-box-candidate) (length company-common) nil)))
+            (align-string (when annotation
+                            (concat " " (and company-tooltip-align-annotations
+                                             (propertize " " 'display `(space :align-to (- right-fringe ,(or len-a 0) 1)))))))
+            (space company-box--space)
+            (icon-p company-box-enable-icon)
+            (annotation-string (and annotation (propertize annotation 'face 'company-box-annotation)))
+            (line (concat (unless (or (and (= space 2) icon-p) (= space 0))
+                            (propertize " " 'display `(space :width ,(if (or (= space 1) (not icon-p)) 1 0.75))))
+                          (company-box--apply-color icon-string i-color)
+                          (company-box--apply-color candidate-string c-color)
+                          align-string
+                          (company-box--apply-color annotation-string a-color)))
+            (len (length line)))
+      (add-text-properties 0 len (list 'company-box--len (+ len-c len-a)
+                                       'company-box--color s-color)
+                           line)
+      line))
+  (advice-add #'company-box--make-line :override #'my-company-box--make-line)
+
+  ;; Prettify icons
+  (defun my-company-box-icons--elisp (candidate)
+    (when (derived-mode-p 'emacs-lisp-mode)
+      (let ((sym (intern candidate)))
+        (cond ((fboundp sym) 'Function)
+              ((featurep sym) 'Module)
+              ((facep sym) 'Color)
+              ((boundp sym) 'Variable)
+              ((symbolp sym) 'Text)
+              (t . nil)))))
+  (advice-add #'company-box-icons--elisp :override #'my-company-box-icons--elisp)
+
+  (declare-function all-the-icons-faicon 'all-the-icons)
+  (declare-function all-the-icons-material 'all-the-icons)
+  (declare-function all-the-icons-octicon 'all-the-icons)
+  (setq company-box-icons-all-the-icons
+        `((Unknown . ,(all-the-icons-material "find_in_page" :height 0.85 :v-adjust -0.2))
+          (Text . ,(all-the-icons-faicon "text-width" :height 0.8 :v-adjust -0.05))
+          (Method . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Function . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Constructor . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Field . ,(all-the-icons-octicon "tag" :height 0.8 :v-adjust 0 :face 'all-the-icons-lblue))
+          (Variable . ,(all-the-icons-octicon "tag" :height 0.8 :v-adjust 0 :face 'all-the-icons-lblue))
+          (Class . ,(all-the-icons-material "settings_input_component" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Interface . ,(all-the-icons-material "share" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Module . ,(all-the-icons-material "view_module" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Property . ,(all-the-icons-faicon "wrench" :height 0.8 :v-adjust -0.05))
+          (Unit . ,(all-the-icons-material "settings_system_daydream" :height 0.85 :v-adjust -0.2))
+          (Value . ,(all-the-icons-material "format_align_right" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Enum . ,(all-the-icons-material "storage" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Keyword . ,(all-the-icons-material "filter_center_focus" :height 0.85 :v-adjust -0.2))
+          (Snippet . ,(all-the-icons-material "format_align_center" :height 0.85 :v-adjust -0.2))
+          (Color . ,(all-the-icons-material "palette" :height 0.85 :v-adjust -0.2))
+          (File . ,(all-the-icons-faicon "file-o" :height 0.85 :v-adjust -0.05))
+          (Reference . ,(all-the-icons-material "collections_bookmark" :height 0.85 :v-adjust -0.2))
+          (Folder . ,(all-the-icons-faicon "folder-open" :height 0.85 :v-adjust -0.05))
+          (EnumMember . ,(all-the-icons-material "format_align_right" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Constant . ,(all-the-icons-faicon "square-o" :height 0.85 :v-adjust -0.05))
+          (Struct . ,(all-the-icons-material "settings_input_component" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Event . ,(all-the-icons-faicon "bolt" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-orange))
+          (Operator . ,(all-the-icons-material "control_point" :height 0.85 :v-adjust -0.2))
+          (TypeParameter . ,(all-the-icons-faicon "arrows" :height 0.8 :v-adjust -0.05))
+          (Template . ,(all-the-icons-material "format_align_center" :height 0.85 :v-adjust -0.2)))
+        company-box-icons-alist 'company-box-icons-all-the-icons))
 
 
 
@@ -424,11 +596,17 @@
   :straight nil
   :hook (dired-mode . (lambda () (setq truncate-lines t)))
   :custom
+  (dired-recursive-deletes 'always)
+  (dired-recursive-copies 'always)
   (dired-deletion-confirmer #'y-or-n-p)
   (dired-no-confirm '(byte-compile chgrp chmod chown copy load move symlink))
   (dired-dwim-target t)
   (dired-listing-switches "-lh")
-  (dired-auto-revert-buffer t))
+  (dired-auto-revert-buffer t)
+  (delete-by-moving-to-trash t)
+  :general
+  (:keymaps 'dired-mode-map
+            "RET" #'dired-find-alternate-file))
 
 (use-package dired-hacks-utils)
 
@@ -481,6 +659,11 @@
   ("C-@" 'er/expand-region
    "C-;" 'er/expand-region))
 
+(use-package multiple-cursors
+  :general
+  ("M-<down-mouse-1>" 'nil
+   "M-<mouse-1>" 'mc/add-cursor-on-click))
+
 (use-package aggressive-indent
   ;; Aggressively indent lines
   :config
@@ -489,13 +672,6 @@
 (use-package display-line-numbers
   ;; Display line numbers for programming languages
   :hook (prog-mode . display-line-numbers-mode))
-
-(use-package outshine
-  :commands outshine-hook-function
-  :hook ((outline-minor-mode . outshine-mode)
-         (emacs-lisp-mode . outline-minor-mode))
-  :init
-  (setq outshine-imenu-show-headlines-p nil))
 
 (use-package highlight-thing
   :hook (prog-mode . highlight-thing-mode)
@@ -676,7 +852,7 @@
   :custom-face
   (mode-line-buffer-id ((t (:height 1.0 :family "Optima"))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
-  (org-document-title ((t (:height 2.0 :weight normal :foreground "LightSkyBlue" :family "Optima"))))
+  (org-document-title ((t (:height 1.5 :weight normal :foreground "LightSkyBlue" :family "Optima"))))
   (org-drawer ((t (:height 0.8 :inherit shadow))))
   (org-block-begin-line ((t (:height 0.8 :inherit shadow))))
   (org-block-end-line ((t (:height 0.8 :inherit shadow))))
@@ -686,7 +862,7 @@
   (org-ellipsis ((t (:underline nil :height 0.5))))
   (org-level-1 ((t (:height 1.2 :weight medium :inherit outline-1))))
   (org-level-2 ((t (:height 1.1 :inherit outline-2))))
-  (org-level-3 ((t (:height 1.1 :inherit outline-3))))
+  (org-level-3 ((t (:height 1.0 :inherit outline-3))))
   (org-level-4 ((t (:height 1.0 :inherit outline-4))))
   (org-level-5 ((t (:height 1.0 :inherit outline-5))))
   (org-level-6 ((t (:height 1.0 :inherit outline-6))))
@@ -715,17 +891,7 @@
   (rm-blacklist '(" ElDoc" " super-save" " ivy" " counsel" " company" " PgLn" " BufFace" " anki-editor"
                   " Outl" " WK" " FmtAll" " hlt" " Rbow" " SliNav" " h" " =>" " Hi" " OVP" " Ind" " yas"))
   (sml/extra-filler 0)
-  (rm-text-properties '(("Outshine" 'display " 🌻")
-                        ("Org-roam" 'display " 🏄🏼‍♂️"))))
-
-(use-package nyan-mode
-  :disabled
-  :config
-  (nyan-mode 1)
-  :custom
-  (nyan-animate-nyancat nil)
-  (nyan-wavy-trail nil)
-  (nyan-minimum-window-width 125))
+  (rm-text-properties '(("Org-roam" 'display " 🏄🏼‍♂️"))))
 
 (use-package shr
   ;; increase contrast between similar colors
