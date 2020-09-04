@@ -84,8 +84,8 @@
                                  :immediate-finish
                                  :unnarrowed t)))
   :custom-face
-  (org-roam-link ((t (:family "Optima" :foreground "LightSkyBlue" :weight bold))))
-  (org-roam-link-current ((t (:family "Optima" :foreground "LawnGreen" :foreground-distant "cyan"))))
+  (org-roam-link ((t (:foreground "gold" :underline t))))
+  (org-roam-link-current ((t (:foreground "LawnGreen" :foreground-distant "cyan"))))
   (org-roam-link-invalid ((t (:family "Optima" :foreground "DarkRed"))))
   :general
   ("C-c f" 'org-roam-find-file

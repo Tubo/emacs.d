@@ -8,7 +8,8 @@
     :headline-offset 1
     :headline-levels 1
     :with-todo-keywords nil
-    :with-toc nil)
+    :with-toc nil
+    :with-tasks ("DONE" "ANKI"))
   "Options for html export")
 
 (defun my/anki--connect-action (action &optional params version)
@@ -109,33 +110,53 @@
 (defun my/anki-add-cloze ()
   "Push the current heading or region to Anki."
   (interactive)
-  (let ((context (read-string "Context: " (car minibuffer-history) '(minibuffer-history . 0))))
-    (save-restriction
-      (org-narrow-to-subtree)
-      (my/anki-reorder-cloze-number)
-      (let* ((deck (org-entry-get-with-inheritance "ANKI_DECK"))
-             (id (org-entry-get (point) "ANKI_NOTE_ID"))
-             (body-end (save-excursion
-                         (org-next-visible-heading 1)
-                         (point)))
-             (content (buffer-substring (point-min) body-end))
-             (html (org-export-string-as content 'html t my/anki--ext-plist)))
-        (if id
-            (my/anki--update-cloze (string-to-number id) html context)
-          (setq id (my/anki--add-cloze deck html context))
-          (org-set-property "ANKI_NOTE_ID" (number-to-string id)))))))
+  (let* ((context-property (org-entry-get-with-inheritance "ANKI_CLOZE_CONTEXT"))
+         (context (or context-property
+                      (read-string "Context: " (car minibuffer-history) '(minibuffer-history . 0)))))
+    (save-excursion
+      (save-restriction
+        (org-narrow-to-subtree)
+        (my/anki-reorder-cloze-number)
+        (let* ((deck (org-entry-get-with-inheritance "ANKI_DECK"))
+               (id (org-entry-get (point) "ANKI_NOTE_ID"))
+               (body-end (save-excursion
+                           (org-next-visible-heading 1)
+                           (point)))
+               (content (buffer-substring (point-min) body-end))
+               (html (org-export-string-as content 'html t my/anki--ext-plist)))
+          (if id
+              (my/anki--update-cloze (string-to-number id) html context)
+            (setq id (my/anki--add-cloze deck html context))
+            (org-set-property "ANKI_NOTE_ID" (number-to-string id))))))))
 
 
 
 ;;; Anki GUI control
 
-(defun my/anki--query-browse (query)
+(defun my/anki--gui-query-browse (query)
   (my/anki--connect-invoke-result
    "guiBrowse" `(("query" . ,query))))
 
-(defun my/anki--current-card ()
+(defun my/anki--gui-current-card ()
   (my/anki--connect-invoke-result
    "guiCurrentCard" '()))
+
+(defun my/anki--gui-current-card-id ()
+  (alist-get 'cardId (my/anki--gui-current-card)))
+
+(defun my/anki-sync-note-id ()
+  "Updates the current note with the current card on Anki GUI."
+  (interactive)
+  (let ((id (my/anki--gui-current-card-id)))
+    (org-set-property "ANKI_NOTE_ID" (number-to-string id))))
+
+(defun my/anki-goto-current-note ()
+  (interactive)
+  (let ((id (my/anki--gui-current-card-id)))
+    (push-mark)
+    (goto-char (point-min))
+    (search-forward (number-to-string id) nil t 1) ))
+
 
 (defun my/formatted-copy (args)
   "Export region or subtree to HTML, and then copy it to the clipboard.
@@ -147,8 +168,9 @@ If ARGS is non-nil, export subtree as visible only (slower) without clozes."
         (org-back-to-heading)
         (org-narrow-to-subtree))
       (my/anki-reorder-cloze-number)
-      (if args                          ; to export a non-clozed version
-          (let ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t '(:headline-levels 1))))
+      (if args                        ; to export a non-clozed version
+          (let ((buf (org-export-to-buffer 'html "*Formatted Copy*" nil nil t t
+                                           '(:headline-levels 1 :headline-offset 2))))
             (with-current-buffer buf
               (mark-whole-buffer)
               (my/anki-del-cloze-region-or-subtree)
