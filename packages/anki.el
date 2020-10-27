@@ -94,7 +94,7 @@
   (let ((fields `(("Text" . ,text)
                   ("Context" . ,(or context ""))
                   ("Extra" . ,(or extra "")))))
-    (my/anki--add-note "Cloze" deck fields)))
+    (my/anki--add-note "Tubo's Cloze" deck fields)))
 
 (defun my/anki--update-note (id fields)
   (my/anki--connect-invoke-result
@@ -107,12 +107,19 @@
                   ("Extra" . ,(or extra "")))))
     (my/anki--update-note id fields)))
 
+(defun my/anki-parent-heading ()
+  "Return the heading of the parent, nil if top level."
+  (save-excursion
+    (org-up-heading-safe)
+    (org-entry-get (point) "ITEM")))
+
 (defun my/anki-add-cloze ()
   "Push the current heading or region to Anki."
   (interactive)
   (let* ((context-property (org-entry-get-with-inheritance "ANKI_CLOZE_CONTEXT"))
+         (context-parent (my/anki-parent-heading))
          (context (or context-property
-                      (read-string "Context: " (car minibuffer-history) '(minibuffer-history . 0)))))
+                      (read-string "Context: " context-parent '(minibuffer-history . 0)))))
     (save-excursion
       (save-restriction
         (org-narrow-to-subtree)
@@ -127,7 +134,8 @@
           (if id
               (my/anki--update-cloze (string-to-number id) html context)
             (setq id (my/anki--add-cloze deck html context))
-            (org-set-property "ANKI_NOTE_ID" (number-to-string id))))))))
+            (org-set-property "ANKI_NOTE_ID" (number-to-string id)))))
+      (recenter 10 t))))
 
 
 

@@ -1,3 +1,6 @@
+
+;; Optimisation
+
 (defconst my/initial-gc-cons-threshold gc-cons-threshold
   "Initial value of `gc-cons-threshold' at start-up time.")
 (setq gc-cons-threshold (* 128 1024 1024))
@@ -8,7 +11,7 @@
 
 
 
-;; Initialise 'use-package and 'general
+;; Initialise 'use-package, 'straight and 'general
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -28,7 +31,6 @@
 (add-to-list 'load-path "~/.emacs.d/config/packages/")
 
 (use-package general)
-(use-package key-chord)
 (use-package restart-emacs)
 
 
@@ -38,37 +40,48 @@
 
 (use-package my/settings
   :straight nil
+  ;; ----------
   :init
+  ;; ----------
   (setq
    locale-coding-system 'utf-8
    require-final-newline t
    column-number-mode t
-   history-length 250
    tab-always-indent 'complete
    confirm-nonexistent-file-or-buffer nil
+   ;; Version control
    vc-follow-symlinks nil
    vc-handled-backends '(Git Hg)
+   ;; Rings
+   history-length 250
    recentf-max-saved-items 5000
    kill-ring-max 5000
    mark-ring-max 5000
+   ;; Windows
+   display-buffer-alist '((".*" (display-buffer-reuse-window display-buffer-same-window)))
+   display-buffer-reuse-frames t      ; reuse windows in other frames
+   even-window-sizes nil              ; display-buffer: avoid resizing
    mouse-autoselect-window -0.1
    indicate-buffer-boundaries 'left
    split-height-threshold 110
    split-width-threshold 160
+   ;; Editing
    show-paren-delay 0
+   abbrev-file-name (expand-file-name "config/abbrev_defs" user-emacs-directory)
+   hi-lock-file-patterns-policy #'(lambda (_) t)
+   ;; Loading
    load-prefer-newer 5
+   ;; Eval
    eval-expression-print-length nil
    eval-expression-print-level nil
-   abbrev-file-name (expand-file-name "config/abbrev_defs" user-emacs-directory)
+   ;; Startup
    inhibit-splash-screen t
    inhibit-startup-message t
    inhibit-default-init t
+   ;; MacOS
    mac-command-modifier 'meta
    mac-option-modifier 'super
    mac-control-modifier 'control
-   hi-lock-file-patterns-policy #'(lambda (_) t))
-
-  (setq
    ;; Vertical Scroll
    scroll-step 1
    scroll-margin 1
@@ -96,7 +109,23 @@
 
   (provide 'my/settings)
 
+  ;; ----------
   :config
+  ;; ----------
+
+  ;; Fonts - depending on the OS
+  (cl-case system-type
+    (darwin
+     (add-to-list 'default-frame-alist '(font . "Hack Nerd Font-12"))
+     (mac-auto-operator-composition-mode t)
+     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
+    (gnu/linux
+     (set-frame-font "Hack Nerd Font")
+     (custom-set-faces '(variable-pitch ((t (:height 1.0 :family "DejaVu Sans"))))))
+    (windows-nt
+     (set-frame-font "Cascadia Code")
+     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Gill Sans MT")))))))
+  
   ;; Mode-line time display
   (setq display-time-24hr-format t
         display-time-day-and-date nil
@@ -105,7 +134,7 @@
   (display-time)
 
   ;; Display buffer size
-  (size-indication-mode 1)
+  (size-indication-mode +1)
 
   ;; Encoding
   (set-default-coding-systems 'utf-8)
@@ -125,27 +154,22 @@
 
   ;; Truncate lines in prog-mode
   (add-hook 'prog-mode-hook (lambda () (toggle-truncate-lines +1)))
+
   ;; Enable or disable modes
   (electric-pair-mode +1)
   (blink-cursor-mode +1)
   (put 'narrow-to-region 'disabled nil)
-
+  
   ;; Help-mode
   (setq help-window-select 'other)
 
-  ;; Fonts - depending on the OS
-  (cl-case system-type
-    (darwin
-     (add-to-list 'default-frame-alist '(font . "Hack Nerd Font-12"))
-     (mac-auto-operator-composition-mode t)
-     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "Avenir Next"))))))
-    (gnu/linux
-     (set-frame-font "Noto Mono Nerd Font")
-     (custom-set-faces '(variable-pitch ((t (:height 1.0 :family "Noto Sans Nerd Font"))))))
-    (windows-nt
-     (set-frame-font "Source Code Pro")
-     (custom-set-faces '(variable-pitch ((t (:height 1.2 :family "DejaVu Sans")))))))
-
+  ;; Emoji
+  (set-fontset-font t 'symbol "Apple Color Emoji")
+  (set-fontset-font t 'symbol "NotoColorEmoji Nerd" nil 'append)
+  (set-fontset-font t 'symbol "NotoEmoji Nerd" nil 'append)
+  (set-fontset-font t 'symbol "Segoe UI Emoji" nil 'append)
+  (set-fontset-font t 'symbol "Symbola" nil 'append)
+  
   :general
   ("C-c c" 'calendar
    "C-x c" 'calc
@@ -188,6 +212,11 @@
    [(shift return)] 'crux-smart-open-line
    "C-k" 'crux-smart-kill-line))
 
+
+
+;; Org-mode
+
+(load-relative "config-org.el")
 
 
 
@@ -202,33 +231,6 @@
   :config
   (exec-path-from-shell-initialize))
 
-(use-package eshell
-  :demand
-  :hook ((eshell-mode . my-eshell-setup)
-         (eshell-mode . eldoc-mode))
-  :init
-  (setq eshell-save-history-on-exit t)
-  (setq eshell-destroy-buffer-when-process-dies t)
-  (setq eshell-where-to-jump 'begin)
-  (setq eshell-hist-ignoredups t)
-  (setq eshell-history-size 10000)
-
-  (add-to-list
-   'display-buffer-alist
-   '("*eshell" (display-buffer-in-side-window) (side . bottom)))
-
-  (defun my-eshell-setup ()
-    (setq-local eldoc-idle-delay 3)
-    (setenv "PAGER" "cat")
-    (setenv "EDITOR" "emacsclient"))
-  :config
-  (use-package esh-help
-    :config (setup-esh-help-eldoc))
-  :general
-  ("C-c s" 'eshell))
-
-(use-package vterm
-  :disabled t)
 
 
 
@@ -284,15 +286,17 @@
   :general
   ("M-1" 'eyebrowse-switch-to-window-config-1)
   ("M-2" 'eyebrowse-switch-to-window-config-2)
-  ("M-3" 'eyebrowse-switch-to-window-config-3))
+  ("M-3" 'eyebrowse-switch-to-window-config-3)
+  ("M-4" 'eyebrowse-switch-to-window-config-4)
+  ("M-5" 'eyebrowse-switch-to-window-config-5))
 
 
 (use-package frame
   ;; Multi-frame management independent of window systems
   :straight nil
   :config
-  (modify-all-frames-parameters '((width . 120)
-                                  (height . 0.8)
+  (modify-all-frames-parameters '((width . 0.5)
+                                  (height . 1.0)
                                   (alpha . (98. 90))))
   ;; Better frame title
   (setq frame-title-format
@@ -328,8 +332,6 @@
    "s-j" 'windmove-left
    "s-l" 'windmove-right))
 
-
-(use-package shackle)
 
 
 
@@ -400,11 +402,6 @@
 
 
 
-
-
-
-
-
 ;; File organisation
 
 (use-package dired
@@ -461,20 +458,6 @@
 
 ;; General editing
 
-(use-package rime
-  :straight (rime :type git
-                  :host github
-                  :repo "DogLooksGood/emacs-rime"
-                  :files ("*.el" "Makefile" "lib.c"))
-  :custom
-  (rime-librime-root "~/.emacs.d/rime-1.5.3-osx/dist")
-  (rime-user-data-dir "~/.emacs.d/config/rime")
-  (default-input-method "rime")
-  (rime-show-candidate 'minibuffer)
-  :general
-  (:keymaps 'rime-mode-map
-            "C-`" 'rime-send-keybinding))
-
 (use-package expand-region
   :general
   ("C-@" 'er/expand-region
@@ -511,22 +494,6 @@
 
 
 
-
-;; Documents
-
-(use-package pdf-tools
-  :init
-  (pdf-loader-install)
-  :config
-  (setq pdf-view-use-scaling t)
-  :bind
-  (:map pdf-view-mode-map
-        ("k" . pdf-view-previous-line-or-previous-page)
-        ("j" . pdf-view-next-line-or-next-page)))
-
-
-
-
 ;; Help
 
 (use-package helpful
@@ -558,33 +525,35 @@
   (load-theme 'zenburn t)
   :custom-face
   (mode-line-buffer-id ((t (:height 1.0 :family "Optima"))))
-  (org-column-title ((t (:family "Hack Nerd Font" :height 3))))
+  (org-column-title ((t (:family "Hack Nerd Font" :height 3.0))))
   (org-column ((t (:height 3))))
+  (org-document-title ((t (:height 1.2 :weight normal :foreground "LightSkyBlue"))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
   (org-document-info-keyword ((t (:height 0.8 :inherit shadow))))
-  (org-document-title ((t (:height 1.5 :weight normal :foreground "LightSkyBlue" :family "Optima"))))
-  (org-drawer ((t (:height 0.8 :inherit shadow))))
-  (org-block-begin-line ((t (:height 0.8 :inherit shadow))))
-  (org-block-end-line ((t (:height 0.8 :inherit shadow))))
   (org-meta-line ((t (:height 0.8 :foreground "gainsboro" :inherit shadow))))
   (org-special-keyword ((t (:height 0.8))))
   (org-property-value ((t (:foreground "DarkGray" :inherit org-special-keyword))))
   (org-ellipsis ((t (:underline nil :height 0.5))))
-  (org-level-1 ((t (:height 1.2 :weight medium :inherit outline-1))))
+  (org-level-1 ((t (:height 1.1 :weight semi-bold :inherit outline-1))))
   (org-level-2 ((t (:height 1.1 :inherit outline-2))))
-  (org-level-3 ((t (:height 1.0 :inherit outline-3))))
-  (org-level-4 ((t (:height 1.0 :inherit outline-4))))
-  (org-level-5 ((t (:height 1.0 :inherit outline-5))))
-  (org-level-6 ((t (:height 1.0 :inherit outline-6))))
-  (org-level-7 ((t (:height 1.0 :inherit outline-7))))
-  (org-level-8 ((t (:height 1.0 :inherit outline-8))))
-  (org-block ((t (:height 0.8))))
+  (org-level-3 ((t (:height 1.1 :inherit outline-3))))
+  (org-level-4 ((t (:height 1.1 :inherit outline-4))))
+  (org-level-5 ((t (:height 1.1 :inherit outline-5))))
+  (org-level-6 ((t (:height 1.1 :inherit outline-6))))
+  (org-level-7 ((t (:height 1.1 :inherit outline-7))))
+  (org-level-8 ((t (:height 1.1 :inherit outline-8))))
   (org-checkbox-statistics-todo ((t (:height 0.8 :inherit (org-todo)))))
   (org-checkbox-statistics-done ((t (:height 0.8 :inherit (org-done)))))
   (org-tag ((t (:height 0.8 :inherit shadow))))
   (org-table ((t (:foreground "#9FC59F" :height 0.8))))
-  (org-done ((t (:foreground "LightGreen"))))
-  (org-code ((t (:height 0.9 :foreground "gainsboro"))))
+  (org-todo ((t (:height 0.8))))
+  (org-done ((t (:height 0.8 :foreground "LightGreen"))))
+  (org-block-begin-line ((t (:height 0.8 :inherit shadow))))
+  (org-block-end-line ((t (:height 0.8 :inherit shadow))))
+  (org-drawer ((t (:height 0.8 :inherit shadow))))
+  (org-code ((t (:inherit org-block))))
+  (org-block ((t (:height 0.8))))
+  (org-quote ((t (:family "Georgia" :height 1.2))))
   (org-date ((t (:height 0.8 :underline (:color foreground-color :style line) :foreground "#8CD0D3")))))
 
 (use-package smart-mode-line
@@ -601,7 +570,7 @@
   (rm-blacklist '(" ElDoc" " super-save" " ivy" " counsel" " company" " PgLn" " BufFace" " anki-editor"
                   " Outl" " WK" " FmtAll" " hlt" " Rbow" " SliNav" " h" " =>" " Hi" " OVP" " Ind" " yas"))
   (sml/extra-filler 0)
-  (rm-text-properties '(("Org-roam" 'display " 🏄🏼‍♂️"))))
+  (rm-text-properties '(("Org-roam" 'display " ⛵"))))
 
 (use-package shr
   ;; increase contrast between similar colors
@@ -623,8 +592,220 @@
 
 
 
-(load-relative "config-prog.el")
-(load-relative "config-org.el")
+;; Autocompletion
+
+(use-package company
+  :disabled
+  :config
+  (defvar completion-at-point-functions-saved nil)
+
+  (defun my/yas-expand-next-field-complete ()
+    (interactive)
+    (if yas-minor-mode
+        (let ((old-point (point))
+              (old-tick (buffer-chars-modified-tick)))
+          (yas-expand)
+          (when (and (eq old-point (point))
+                     (eq old-tick (buffer-chars-modified-tick)))
+            (ignore-errors (yas-next-field))
+            (when (and (eq old-point (point))
+                       (eq old-tick (buffer-chars-modified-tick)))
+              (company-complete-common))))
+      (company-complete-common)))
+
+  (setq company-backends (remove 'company-ropemacs company-backends))
+
+  ;; Usage based completion sorting
+  (defun my/company-elisp-setup ()
+    (set (make-local-variable 'company-backends)
+         '((company-capf :with company-dabbrev-code))))
+  
+  (use-package company-statistics
+    :hook ((emacs-lisp-mode lisp-interaction-mode) . my/company-elisp-setup)
+    :config (company-statistics-mode))
+
+  :custom
+  (company-idle-delay 0.3)
+  (company-tooltip-limit 10)
+  (company-minimum-prefix-length 2)
+  (tab-always-indent 'complete)
+  :general
+  (:keymaps 'company-active-map
+            "TAB" 'my/yas-expand-next-field-complete))
+
+(use-package company-box
+  :diminish
+  :after company
+  :hook (company-mode . company-box-mode)
+  :functions (my-company-box--make-line
+              my-company-box-icons--elisp)
+  :commands (company-box--get-color
+             company-box--resolve-colors
+             company-box--add-icon
+             company-box--apply-color
+             company-box--make-line
+             company-box-icons--elisp)
+  :custom
+  (company-box-backends-colors nil)
+  (company-box-show-single-candidate t)
+  (company-box-max-candidates 50)
+  (company-box-doc-delay 0.3)
+  :config
+  ;; Support `company-common'
+  (defun my-company-box--make-line (candidate)
+    (-let* (((candidate annotation len-c len-a backend) candidate)
+            (color (company-box--get-color backend))
+            ((c-color a-color i-color s-color) (company-box--resolve-colors color))
+            (icon-string (and company-box--with-icons-p (company-box--add-icon candidate)))
+            (candidate-string (concat (propertize (or company-common "") 'face 'company-tooltip-common)
+                                      (substring (propertize candidate 'face 'company-box-candidate) (length company-common) nil)))
+            (align-string (when annotation
+                            (concat " " (and company-tooltip-align-annotations
+                                             (propertize " " 'display `(space :align-to (- right-fringe ,(or len-a 0) 1)))))))
+            (space company-box--space)
+            (icon-p company-box-enable-icon)
+            (annotation-string (and annotation (propertize annotation 'face 'company-box-annotation)))
+            (line (concat (unless (or (and (= space 2) icon-p) (= space 0))
+                            (propertize " " 'display `(space :width ,(if (or (= space 1) (not icon-p)) 1 0.75))))
+                          (company-box--apply-color icon-string i-color)
+                          (company-box--apply-color candidate-string c-color)
+                          align-string
+                          (company-box--apply-color annotation-string a-color)))
+            (len (length line)))
+      (add-text-properties 0 len (list 'company-box--len (+ len-c len-a)
+                                       'company-box--color s-color)
+                           line)
+      line))
+  (advice-add #'company-box--make-line :override #'my-company-box--make-line)
+
+  ;; Prettify icons
+  (defun my-company-box-icons--elisp (candidate)
+    (when (derived-mode-p 'emacs-lisp-mode)
+      (let ((sym (intern candidate)))
+        (cond ((fboundp sym) 'Function)
+              ((featurep sym) 'Module)
+              ((facep sym) 'Color)
+              ((boundp sym) 'Variable)
+              ((symbolp sym) 'Text)
+              (t . nil)))))
+  (advice-add #'company-box-icons--elisp :override #'my-company-box-icons--elisp)
+
+  (declare-function all-the-icons-faicon 'all-the-icons)
+  (declare-function all-the-icons-material 'all-the-icons)
+  (declare-function all-the-icons-octicon 'all-the-icons)
+  (setq company-box-icons-all-the-icons
+        `((Unknown . ,(all-the-icons-material "find_in_page" :height 0.85 :v-adjust -0.2))
+          (Text . ,(all-the-icons-faicon "text-width" :height 0.8 :v-adjust -0.05))
+          (Method . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Function . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Constructor . ,(all-the-icons-faicon "cube" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-purple))
+          (Field . ,(all-the-icons-octicon "tag" :height 0.8 :v-adjust 0 :face 'all-the-icons-lblue))
+          (Variable . ,(all-the-icons-octicon "tag" :height 0.8 :v-adjust 0 :face 'all-the-icons-lblue))
+          (Class . ,(all-the-icons-material "settings_input_component" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Interface . ,(all-the-icons-material "share" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Module . ,(all-the-icons-material "view_module" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Property . ,(all-the-icons-faicon "wrench" :height 0.8 :v-adjust -0.05))
+          (Unit . ,(all-the-icons-material "settings_system_daydream" :height 0.85 :v-adjust -0.2))
+          (Value . ,(all-the-icons-material "format_align_right" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Enum . ,(all-the-icons-material "storage" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Keyword . ,(all-the-icons-material "filter_center_focus" :height 0.85 :v-adjust -0.2))
+          (Snippet . ,(all-the-icons-material "format_align_center" :height 0.85 :v-adjust -0.2))
+          (Color . ,(all-the-icons-material "palette" :height 0.85 :v-adjust -0.2))
+          (File . ,(all-the-icons-faicon "file-o" :height 0.85 :v-adjust -0.05))
+          (Reference . ,(all-the-icons-material "collections_bookmark" :height 0.85 :v-adjust -0.2))
+          (Folder . ,(all-the-icons-faicon "folder-open" :height 0.85 :v-adjust -0.05))
+          (EnumMember . ,(all-the-icons-material "format_align_right" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-lblue))
+          (Constant . ,(all-the-icons-faicon "square-o" :height 0.85 :v-adjust -0.05))
+          (Struct . ,(all-the-icons-material "settings_input_component" :height 0.85 :v-adjust -0.2 :face 'all-the-icons-orange))
+          (Event . ,(all-the-icons-faicon "bolt" :height 0.8 :v-adjust -0.05 :face 'all-the-icons-orange))
+          (Operator . ,(all-the-icons-material "control_point" :height 0.85 :v-adjust -0.2))
+          (TypeParameter . ,(all-the-icons-faicon "arrows" :height 0.8 :v-adjust -0.05))
+          (Template . ,(all-the-icons-material "format_align_center" :height 0.85 :v-adjust -0.2)))
+        company-box-icons-alist 'company-box-icons-all-the-icons))
+
+
+
+
+
+;; Emacs Lisp
+
+(use-package lispy
+  :hook
+  (emacs-lisp-mode . lispy-mode )
+  :config
+  (defun my/conditionally-enable-lispy ()
+    (when (eq this-command 'eval-expression)
+      (lispy-mode 1)))
+  (add-hook 'minibuffer-setup-hook 'my/conditionally-enable-lispy)
+  :general
+  (:keymaps 'lispy-mode-map
+            "\"" 'lispy-doublequote))
+
+(use-package elisp-refs)
+
+(use-package elisp-slime-nav
+  :hook ((emacs-lisp-mode ielm-mode) . elisp-slime-nav-mode))
+
+(use-package highlight-defined
+  :hook (emacs-lisp-mode . highlight-defined-mode))
+
+(use-package rainbow-delimiters
+  :hook (emacs-lisp-mode . rainbow-delimiters-mode))
+
+(use-package eldoc
+  :hook (emacs-lisp-mode . eldoc-mode)
+  :hook (lisp-interaction-mode-hook . eldoc-mode))
+
+(use-package page-break-lines
+  ;; Display ^L (C-q C-l) page breaks as tidy horizontal lines
+  :config
+  (global-page-break-lines-mode))
+
+(use-package eval-sexp-fu
+  :init
+  (setq eval-sexp-fu-flash-duration 0.4)
+  :config
+  (turn-on-eval-sexp-fu-flash-mode)
+  :general
+  (:keymaps 'emacs-lisp-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp)
+  (:keymaps 'lisp-interaction-mode-map
+            "C-c C-c" 'eval-sexp-fu-eval-sexp-inner-list
+            "C-c C-e" 'eval-sexp-fu-eval-sexp-inner-sexp))
+
+(use-package eros
+  :hook (emacs-lisp-mode . eros-mode )
+  :hook (lisp-interaction-mode . eros-mode))
+
+(use-package ielm
+  :config
+  (add-hook 'inferior-emacs-lisp-mode-hook
+            (lambda ()
+              (turn-on-eldoc-mode))))
+
+(use-package ipretty
+  :config (ipretty-mode t))
+
+
+
+
+
+
+;; Json
+
+(use-package json-mode
+  :mode "\\.json\\'")
+
+;; Yaml
+(use-package yaml-mode
+  :mode "\\.yml\\'"
+  :general
+  (:keymaps 'yaml-mode-map
+            "C-m" 'newline-and-indent))
+
+
 
 (setq custom-file (expand-file-name "config/custom.el" user-emacs-directory))
 (load custom-file)
+(desktop-save-mode +1)

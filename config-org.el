@@ -1,4 +1,5 @@
 (use-package org
+  :after yasnippet
   :straight org-plus-contrib
   :hook ((org-mode . (lambda () (visual-line-mode 1)))
          (org-mode . (lambda () (abbrev-mode 1)))
@@ -8,28 +9,33 @@
   (require 'org-tempo)
   (yas-reload-all)
   (setq prettify-symbols-unprettify-at-point 'right-edge)
+  (setq org-format-latex-options (plist-put org-format-latex-options :scale 1.2))
   (org-clock-persistence-insinuate)
 
   :custom
   (org-agenda-files (quote ("~/Dropbox/org/gtd.org")))
   (org-refile-targets '((nil :maxlevel . 2)))
+  (org-refile-use-outline-path t)
+  (org-outline-path-complete-in-steps nil)
   (org-clock-persist 'history)
   (org-use-sub-superscripts "{}")
   (org-log-done 'time)
   (org-fontify-done-headline nil)
+  (org-fontify-quote-and-verse-blocks t)
   (org-export-backends '(ascii html latex org))
   (org-pretty-entities t)
   (org-startup-indented t)
   (org-startup-folded 'fold)
   (org-startup-with-inline-images t)
   (org-image-actual-width '(500))
+  (org-latex-create-formula-image-program 'dvisvgm)
   (org-edit-src-content-indentation 0)
   (org-src-tab-acts-natively t)
   (org-clock-persist 'history)
   (org-agenda-todo-list-sublevels nil)
   (org-tags-column -80)
   (org-odd-levels-only nil)
-  (org-ellipsis " ⤵")
+  (org-ellipsis " ⤸")
   (org-hide-leading-stars t)
   (org-hide-emphasis-markers t)
   (org-enforce-todo-dependencies t)
@@ -47,16 +53,15 @@
 
 
 
-
-
 (use-package org-roam
-  :hook
-  (after-init . org-roam-mode)
+  :after org
   :custom
-  (org-roam-buffer "*Notes Collection*")
-  (org-roam-buffer-position 'right)
-  (org-roam-completion-system 'ivy)
   (org-roam-directory "~/Dropbox/org/notes/")
+  (org-roam-buffer "*Notes Collection*")
+  (org-roam-verbose nil)
+  (org-roam-buffer-position 'right)
+  (org-roam-completion-system 'default)
+  (org-roam-completion-everywhere t)
   (org-roam-tag-sources '(prop last-directory))
   (org-roam-link-title-format "%s")
   (org-roam-capture-templates '(("d" "default" plain (function org-roam--capture-get-point)
@@ -84,9 +89,9 @@
                                  :immediate-finish
                                  :unnarrowed t)))
   :custom-face
-  (org-roam-link ((t (:foreground "gold" :underline t))))
-  (org-roam-link-current ((t (:foreground "LawnGreen" :foreground-distant "cyan"))))
-  (org-roam-link-invalid ((t (:family "Optima" :foreground "DarkRed"))))
+  (org-roam-link ((t (:underline nil :inherit org-link))))
+  (org-roam-link-current ((t (:foreground "green" :inherit org-link))))
+  (org-roam-link-invalid ((t (:foreground "DarkRed" :inherit org-link))))
   :general
   ("C-c f" 'org-roam-find-file
    "C-c i" 'org-roam-insert
@@ -95,6 +100,7 @@
    "C-c r" 'org-roam))
 
 (use-package org-journal
+  :after org-roam
   :bind
   ("C-c n j" . org-journal-new-entry)
   :custom
@@ -107,7 +113,9 @@
 
 
 (use-package worf
-  :hook (org-mode . worf-mode))
+  :hook (org-mode . worf-mode)
+  :config
+  (worf-define-key worf-mode-map "r" 'org-refile))
 
 (use-package org-variable-pitch
   :hook (org-mode . org-variable-pitch-minor-mode)
@@ -169,6 +177,8 @@
 
 
 (use-package org-ref
+  :disabled
+  :after org
   :config
   (defun my/org-ref-open-pdf-at-point ()
     "Open the pdf for bibtex key under point if it exists."
@@ -212,10 +222,10 @@
 
 
 
-
 ;; Org export backends
-;; ====================
+
 (use-package ox-pandoc
+  :defer
   :custom
   (org-pandoc-menu-entry
    '((120 "to docx and open." org-pandoc-export-to-docx-and-open)
